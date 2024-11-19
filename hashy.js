@@ -1,47 +1,18 @@
 var ioUtils = require("./.hashy/modules/ioUtils");
 require("./.hashy/modules/loopObj");
 
+require("./.hashy/modules/loopObj");
+
 var hsh = null;
 var dur = null;
 var spf = null;
 
 
-var data_metaobjs_dir_name="meta_objs";
-var data_duration_maps_dir_name="runtimes";
-
-
-
-var metaobjs_dir=null;
-var duration_maps_dir=null;
 
 
 
 
 
-
-
-function getMetaObjsDir(){
-	if(metaobjs_dir==null){
-		var parent_dir = getDataDir();
-		metaobjs_dir = mp.utils.join_path(parent_dir,data_metaobjs_dir_name);
-	}
-	return metaobjs_dir;
-}
-
-function getDurationMapsDir(){
-	if(duration_maps_dir==null){
-		var parent_dir = getDataDir();
-		duration_maps_dir = mp.utils.join_path(parent_dir,data_duration_maps_dir_name);
-	}
-	return duration_maps_dir;
-}
-
-
-function MetaDataObj(hash){
-	this.hash=null;
-	
-
-}
 
 
 function getEstFps(){
@@ -92,10 +63,12 @@ function on_timepos_change(){
 
 
 function doTheThing(){
+	dump(LoopObj);
+	//decodeURIComponent(new LoopObj().prototype);
 	//print(getEnvironmentVarVal("PWD",mp.utils.get_env_list()));
 	//print(getRmDirNodes("a/b/c",getMetaObjsDir()));
-	print(mp.utils.split_path(getMetaObjsDir()));
-	dump(ioUtils);
+	//print(mp.utils.split_path(getMetaObjsDir()));
+	//dump(ioUtils);
 
 /**
 	var nerp = new Tags();
