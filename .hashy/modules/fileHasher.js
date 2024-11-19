@@ -18,6 +18,6 @@ function blake3sum(filePath) {
 	}
 	return hsh;
 
-}
+
 
 module.exports.blake3sum=blake3sum;

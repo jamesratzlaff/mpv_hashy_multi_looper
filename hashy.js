@@ -1,7 +1,6 @@
 var ioUtils = require("./.hashy/modules/ioUtils");
-require("./.hashy/modules/loopObj");
+var loopy = require("./.hashy/modules/loopObj");
 
-require("./.hashy/modules/loopObj");
 
 var hsh = null;
 var dur = null;
@@ -54,7 +53,17 @@ function on_timepos_change(){
 
 
 
-
+function gerph(){
+	this.doopy="poopy";
+}
+gerph.prototype.jambalaya = function(){
+	return this.doopy+"sauce";
+}
+function merph(){
+	
+	this.pooder=0;
+}
+merph.prototype=gerph.prototype;
 
 
 
@@ -63,7 +72,11 @@ function on_timepos_change(){
 
 
 function doTheThing(){
-	dump(LoopObj);
+	var loo = new loopy.LoopObj(0,25);
+	var noo = new merph();
+	var moo = new gerph();
+	print(moo.jambalaya());
+	print(noo.jambalaya());
 	//decodeURIComponent(new LoopObj().prototype);
 	//print(getEnvironmentVarVal("PWD",mp.utils.get_env_list()));
 	//print(getRmDirNodes("a/b/c",getMetaObjsDir()));

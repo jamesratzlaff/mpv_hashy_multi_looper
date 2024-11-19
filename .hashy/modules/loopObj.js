@@ -1,5 +1,5 @@
-require("./range");
-require("./tags");
+var rng = require("./range");
+var tgs = require("./tags");
 
 function LoopObj(start,end,tags){
 	this._range=null;
@@ -7,16 +7,16 @@ function LoopObj(start,end,tags){
 	this.enabled=true;
 	if(typeof start == "object"){
 			if(!(start instanceof LoopObj)){
-				this._range=new Range(start);
-				this._tags=new Tags(start.tags);
+				this._range=new rng.Range(start);
+				this._tags=new tgs.Tags(start.tags);
 			} else {
 				this._range=start._range.copy();
 				this._tags=start._tags.copy();
 				this._enabled=start.enabled;
 			}
 	} else {
-		this._range=new Range(start,end);
-		this._tags=new Tags(tags);
+		this._range=new rng.Range(start,end);
+		this._tags=new tgs.Tags(tags);
 	}
 
 
