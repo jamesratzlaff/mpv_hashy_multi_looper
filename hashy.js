@@ -1,5 +1,6 @@
 var ioUtils = require("./.hashy/modules/ioUtils");
 var loopy = require("./.hashy/modules/loopObj");
+var hashCache = require("./.hashy/modules/hashCache");
 
 
 var hsh = null;
@@ -72,11 +73,8 @@ merph.prototype=gerph.prototype;
 
 
 function doTheThing(){
-	var loo = new loopy.LoopObj(0,25);
-	var noo = new merph();
-	var moo = new gerph();
-	print(moo.jambalaya());
-	print(noo.jambalaya());
+	var hc = new hashCache.HashCache();
+	print(hc.getHash());
 	//decodeURIComponent(new LoopObj().prototype);
 	//print(getEnvironmentVarVal("PWD",mp.utils.get_env_list()));
 	//print(getRmDirNodes("a/b/c",getMetaObjsDir()));

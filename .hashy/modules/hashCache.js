@@ -1,6 +1,6 @@
-require("./dataDir");
-require("./fileHasher");
-const { blake3sum } = require("./fileHasher");
+var dataDir = require("./dataDir");
+var fileHasher = require("./fileHasher");
+
 var ioUtils = require("./ioUtils");
 var cacheFileExt=".json";
 var data_hash_cache_dir_name="hash_cache";
@@ -8,7 +8,7 @@ var hash_cache_dir=null;
 
 function getHashCacheDir(){
 	if(hash_cache_dir==null){
-		var parent_dir = getDataDir();
+		var parent_dir = dataDir.getDataDir();
 		hash_cache_dir = mp.utils.join_path(parent_dir,data_hash_cache_dir_name);
 	}
 	return hash_cache_dir;
@@ -79,7 +79,7 @@ function HashCacheData(hashCacheFilePath){
 		if(hash!=undefined){
 			this._hash=hash;
 		}
-		return hash;
+		return this._hash;
 	}
 	this.mtime=function(mtime){
 		return this._hashChangeIndicator.mtime(mtime);
@@ -154,6 +154,9 @@ function HashChangeIndicator(size, mtime){
 
 }
 function HashCache(filePath){
+	if(!filePath){
+		filePath=mp.get_property("path");
+	}
 	this._ogFilePath=filePath;
 	this._ogSizeAndModifiedTime=new HashChangeIndicator(mp.utils.file_info(this._ogFilePath));
 	this._hashCacheData = new HashCacheData(getHashCacheFilePath(this._ogFilePath));
@@ -188,19 +191,17 @@ function HashCache(filePath){
 		this._undefineAndDeleteHashCacheIfInvalid();
 		if(this._hashCacheData==undefined){
 			this._hashCacheData=new HashCacheData(getHashCacheFilePath(this._ogFilePath));
-			var calcHash = blake3sum(this._ogFilePath);
+			var calcHash = fileHasher.blake3sum(this._ogFilePath);
 			this._hashCacheData.hash(calcHash);
 			this._hashCacheData.mtime(this._ogSizeAndModifiedTime.mtime());
 			this._hashCacheData.size(this._ogSizeAndModifiedTime.size());
-			mp.utils.write_file("file://"+this._hashCacheData.filePath, JSON.stringify(this._hashCacheData));
+			ioUtils.writeFile(this._hashCacheData.filePath, JSON.stringify(this._hashCacheData));
 			this._hashCacheIsValid=true;
 		}
 		if(this._hashCacheData!=undefined){
 			return this._hashCacheData.hash();
 		}
 	}
-
-
-
 }
 module.exports.getHashCacheDir=getHashCacheDir;
+module.exports.HashCache=HashCache;
