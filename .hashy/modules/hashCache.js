@@ -191,12 +191,16 @@ function HashCache(filePath){
 		this._undefineAndDeleteHashCacheIfInvalid();
 		if(this._hashCacheData==undefined){
 			this._hashCacheData=new HashCacheData(getHashCacheFilePath(this._ogFilePath));
-			var calcHash = fileHasher.blake3sum(this._ogFilePath);
+			var calcHash = fileHasher.hashFile(this._ogFilePath);
 			this._hashCacheData.hash(calcHash);
 			this._hashCacheData.mtime(this._ogSizeAndModifiedTime.mtime());
 			this._hashCacheData.size(this._ogSizeAndModifiedTime.size());
-			ioUtils.writeFile(this._hashCacheData.filePath, JSON.stringify(this._hashCacheData));
-			this._hashCacheIsValid=true;
+			if(this._hashCacheData.hash()){
+				ioUtils.writeFile(this._hashCacheData.filePath, JSON.stringify(this._hashCacheData));
+				this._hashCacheIsValid=true;
+			} else {
+				this._hashCacheData=undefined;
+			}
 		}
 		if(this._hashCacheData!=undefined){
 			return this._hashCacheData.hash();
