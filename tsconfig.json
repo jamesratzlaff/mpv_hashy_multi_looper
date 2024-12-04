@@ -4,18 +4,20 @@
     "compilerOptions": {
       "outDir": "dist",
       "allowJs": true,
-      "checkJs":true,
+      //"checkJs":true,
       "strict": true,
       "target": "ES5",
       "module": "CommonJS",
-      "moduleResolution": "node10",
+      "moduleResolution": "node",
       "declaration": true,
       "incremental": true,
       "esModuleInterop": true,
       "declarationDir": "dist/dts"
       
     },
+    "files": ["src/ts/hashy/main.js"],
     "include": [
+
       "src/",
       "global.d.ts",
       "types/*.d.ts"
