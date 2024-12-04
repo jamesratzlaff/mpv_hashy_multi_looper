@@ -1,11 +1,11 @@
-var ioUtils = require("./ioUtils");
-var sha256_blake_hash_regex=/^[0-9a-fA-F]{64}$/;
+import { file_exists } from "./IOUtils";
+export const sha256_blake_hash_regex=/^[0-9a-fA-F]{64}$/;
 
 //note each hashing function that calls command_native should not be directly exposed, it'd be a shame of somehow command line injection occured
 //instead an exported wrapper function that first calls ioUtils.file_exists should be called
 
-function sha256sumWin(filePath) {
-	var hsh = null;
+function sha256sumWin(filePath:string) {
+	var hsh = "";
 	print(filePath);
 	var reso = mp.command_native({
 		"name": "subprocess",
@@ -16,7 +16,7 @@ function sha256sumWin(filePath) {
 
 	if (reso.status != 0) {
 		dump(reso);
-		hsh = null;
+		hsh = "";
 	} else {
 		hsh = reso.stdout.trim();
 		var lines = hsh.split(/[\r\n]+/).map(function(line){return line.trim();});
@@ -32,12 +32,12 @@ function sha256sumWin(filePath) {
 	//certutil - hashfile PXL_20221218_033835363.mp4 SHA256
 }
 
-function is256BitHexString(str){
+export function is256BitHexString(str:string){
 	return sha256_blake_hash_regex.test(str);
 }
 
-function sha256sumLnx(filePath) {
-	var hsh = null;
+function sha256sumLnx(filePath:string) {
+	var hsh = "";
 	print(filePath);
 	var reso = mp.command_native({
 		"name": "subprocess",
@@ -46,10 +46,10 @@ function sha256sumLnx(filePath) {
 		"args": ["sha256sum", filePath]
 	});
 
-	if (reso.status != 0) {
+	if ( reso.status != 0) {
 		mp.msg.warn("sha256sumLnx did not have a zero status")
 		dump(reso);
-		hsh = null;
+		hsh = "";
 	} else {
 		hsh = reso.stdout.trim();
 		var parts = hsh.split(/[\s]+/);
@@ -61,9 +61,9 @@ function sha256sumLnx(filePath) {
 	return hsh;
 }
 
-function hashFile(filePath){
-	var hsh=null;
-	if(ioUtils.file_exists(filePath)){
+export function hashFile(filePath:string){
+	var hsh="";
+	if(file_exists(filePath)){
 		//TODO:add some logic for linux vs windows
 		hsh=sha256sumLnx(filePath);
 	}
@@ -74,8 +74,8 @@ function hashFile(filePath){
 //also if different algorithms can be selected including the algorithm in the cache will be necessary and due to 
 //blake3 and sha256 both being 256 bits in length will either cause loop data file duplication and generally make
 //things a bit messy
-function blake3sum(filePath) {
-	var hsh = null;
+function blake3sum(filePath:string) {
+	var hsh = "";
 	print(filePath);
 	//var f=[];
 	//f.push(mp.get_property("working-directory"));
@@ -87,17 +87,13 @@ function blake3sum(filePath) {
 		"args": ["b3sum", "--no-names", filePath]
 	});
 
-	if (reso.status != 0) {
+	if (reso && reso.status != 0) {
 		dump(reso);
-		hsh = null;
+		hsh = "";
 	} else {
 		hsh = reso.stdout.trim().toLowerCase();
 	}
 	return hsh;
 }
 
-
-
-module.exports.hashFile=hashFile;
-module.exports.is256BitHexString=is256BitHexString;
 

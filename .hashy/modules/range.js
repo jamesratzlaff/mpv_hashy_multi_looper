@@ -30,7 +30,7 @@ function Range(start, end){
 	this._end=end;
 	this._modified=modified;
 	//conditionally returns new instance
-	this.withStart=function(value){
+	Range.prototype.withStart=function(value){
 		if(value==undefined||value==null||isNaN(value)){
 			return this;
 		}
@@ -42,7 +42,7 @@ function Range(start, end){
 		return this;
 	}
 	//conditionally returns new instance
-	this.withEnd=function(value){
+	Range.prototype.withEnd=function(value){
 		if(value==undefined||value==null||isNaN(value)){
 			return this;
 		}
@@ -54,7 +54,7 @@ function Range(start, end){
 		return this;
 	}
 	//mutates
-	this.start=function(value){
+	Range.prototype.start=function(value){
 		if(value==undefined||value==null||isNaN(value)){
 			return this._start;
 		}
@@ -71,7 +71,7 @@ function Range(start, end){
 		return false;
 	}
 	//mutates
-	this.end=function(value){
+	Range.prototype.end=function(value){
 		if(value==undefined||value==null||isNaN(value)){
 			return this._end;
 		}
@@ -86,22 +86,22 @@ function Range(start, end){
 			return true;
 		}
 	}
-	this.copy=function(){
+	Range.prototype.copy=function(){
 		return new Range(this);
 	}
-	this.copyAndSet=function(start,end){
+	Range.prototype.copyAndSet=function(start,end){
 		var cpy=this.copy();
 		cpy.set(start,end);
 		return cpy;
 	}
 	//mutates
-	this.set=function(start,end){
+	Range.prototype.set=function(start,end){
 		var changed=this.start(start);
 		changed|=this.end(end);
 		return changed;
 	}
 	//mutates
-	this.offset=function(amt){
+	Range.prototype.offset=function(amt){
 		if(amt!=0){
 			this._start=this.start()+amt;
 			this._end=this.end()+amt;
@@ -110,14 +110,14 @@ function Range(start, end){
 		return this;
 	}
 	//returns new instance
-	this.withOffset=function(amt){
+	Range.prototype.withOffset=function(amt){
 		if(amt!=0){
 			return this.copy().offset(amt);
 		}
 		return this;
 	}
 	//mutates
-	this.scale=function(scale){
+	Range.prototype.scale=function(scale){
 		if(scale!=0&&scale!=1){
 			this._start=this.start()*amt;
 			this._end=this.end()*amt;
@@ -126,42 +126,42 @@ function Range(start, end){
 		return this;
 	}
 	//returns new instance
-	this.withScale=function(scale){
+	Range.prototype.withScale=function(scale){
 		if(scale!=0&&scale!=1){
 			return this.copy().scale(scale);
 		}
 		return this;
 	}
 	//mutates
-	this.asPercentage=function(percentOfWhat){
+	Range.prototype.asPercentage=function(percentOfWhat){
 		if(percentOfWhat!=0){
 			this.scale(1/percentOfWhat);
 		}
 		return this;
 	}
 	//returns new instance
-	this.toPercentage=function(percentOfWhat){
+	Range.prototype.toPercentage=function(percentOfWhat){
 		if(percentOfWhat!=0){
 			return this.copy().asPercentage(percentageOfWhat);
 		}
 		return this;
 	}
-	this.hasSameStartAs=function(other){
+	Range.prototype.hasSameStartAs=function(other){
 		return this.start()==other.start();
 	}
-	this.startsBefore=function(other){
+	Range.prototype.startsBefore=function(other){
 		return this.start()<other.start();
 	}
-	this.startsAfter=function(other){
+	Range.prototype.startsAfter=function(other){
 		return this.start()>other.start();
 	}
-	this.hasSameEndAs=function(other){
+	Range.prototype.hasSameEndAs=function(other){
 		return this.end()==other.end();
 	}
-	this.endsBefore=function(other){
+	Range.prototype.endsBefore=function(other){
 		return this.end()<other.end();
 	}
-	this.endsAfter=function(other){
+	Range.prototype.endsAfter=function(other){
 		return this.end()>other.end();
 	}
 	function _containsOrIsEqualTo(other){
@@ -170,32 +170,32 @@ function Range(start, end){
 	function _containedByOrIsEqualTo(other){
 		return (this.hasSameStartAs(other)||this.startsAfter(other))&&(this.hasSameEndAs(other)||this.endsBefore(other));
 	}
-	this.contains=function(other){
+	Range.prototype.contains=function(other){
 		if(!this.equals(other)){
 			return _containsOrIsEqualTo(other);
 		}
 	}
-	this.containedBy=function(other){
+	Range.prototype.containedBy=function(other){
 		if(!this.equals(other)){
 			return _containedByOrIsEqualTo(other);
 		}
 	}
 	
 	
-	this.length=function(){
+	Range.prototype.length=function(){
 		return this.end()-this.start();
 	}
-	this.equals=function(other){
+	Range.prototype.equals=function(other){
 		if(!other instanceof Range){
 			return false;
 		}
 		return this.compareTo(other)==0;
 	}
-	this.compareTo=function(other){
+	Range.prototype.compareTo=function(other){
 		return compareRange(this,other);
 	}
 	
-	this.toJSON=function(){
+	Range.prototype.toJSON=function(){
 		return {"start":this.start(),"end":this.end()};	
 	}
 }
