@@ -109,7 +109,7 @@ declare namespace mp {
     }
 
     interface IntputGet extends InputOpts {
-        defaultText?: string,
+        default_text?: string,
         submit: (textInput: string) => void,
         closed?: (textInput: string, cursor_pos: number) => void,
         cursor_position?: number,
