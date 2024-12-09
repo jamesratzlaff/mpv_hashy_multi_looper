@@ -12,7 +12,7 @@ export class NumberRange{
     
     private _start: number;
     private _end: number;
-    constructor(start:any, end?:number){
+    constructor(start:any=0, end?:number){
     var modified=false;
 	if(typeof start == "object"){
 		var objStart = start.start;
@@ -177,45 +177,122 @@ export class NumberRange{
 		}
 		return this;
 	}
-	public hasSameStartAs(other:NumberRange){
-		return this.start==other.start;
+
+	
+
+	public hasSameStartAs(other:NumberRange|number|HasStartAndEnd):boolean{
+		return this.start== _extractStart(other);
 	}
-	public startsBefore(other:NumberRange){
-		return this.start<other.start;
+	public startsBefore(other:NumberRange|number|HasStartAndEnd):boolean{
+		return this.start<_extractStart(other);
 	}
-	public startsAfter(other:NumberRange){
-		return this.start>other.start;
+	public startsAfter(other:NumberRange|number|HasStartAndEnd):boolean{
+		return this.start>_extractStart(other);
 	}
-	public hasSameEndAs(other:NumberRange){
-		return this.end==other.end;
+	public hasSameEndAs(other:NumberRange|number|HasStartAndEnd):boolean{
+		return this.end==_extractEnd(other);
 	}
-	public endsBefore(other:NumberRange){
-		return this.end<other.end;
+	public endsBefore(other:NumberRange|number|HasStartAndEnd):boolean{
+		return this.end<_extractEnd(other);
 	}
-	public endsAfter(other:NumberRange){
-		return this.end>other.end;
+	public distanceBetweenEndToStartOf(other:NumberRange|number|HasStartAndEnd):number {
+		return _extractStart(other)-this.end;
 	}
-	private _containsOrIsEqualTo(other:NumberRange){
+	public distanceBetweenStartToEndOf(other:NumberRange|number|HasStartAndEnd):number {
+		return this.start-_extractEnd(other);
+	}
+	public endsAfter(other:NumberRange|number|HasStartAndEnd):boolean{
+		return this.end>_extractEnd(other);
+	}
+	private _containsOrIsEqualTo(other:NumberRange|number|HasStartAndEnd):boolean{
 		return (this.hasSameStartAs(other)||this.startsBefore(other))&&(this.hasSameEndAs(other)||this.endsAfter(other));
 	}
-	private _containedByOrIsEqualTo(other:NumberRange){
+	private _containedByOrIsEqualTo(other:NumberRange|number|HasStartAndEnd):boolean{
 		return (this.hasSameStartAs(other)||this.startsAfter(other))&&(this.hasSameEndAs(other)||this.endsBefore(other));
 	}
-	public contains(other:NumberRange){
-		if(!this.equals(other)){
+	/**
+	 * 
+	 * @param other 
+	 * @returns true if other is a number represents the exclusive end value of this NumberRange 
+	 */
+	private _hasEndBoundary(other:NumberRange|number|HasStartAndEnd):boolean {
+		return (_extractEnd(other)===this.end)&&(lengthOf(other)===0);
+	}
+	public contains(other:NumberRange|number|HasStartAndEnd):boolean{
+		if(!(this._hasEndBoundary(other)||this.similarTo(other))){
 			return this._containsOrIsEqualTo(other);
 		}
+		return false;
 	}
-	public containedBy(other:NumberRange){
+	public startsWith(other:NumberRange|number|HasStartAndEnd):boolean {
+		return this.hasSameStartAs(other)&&((this.hasSameEndAs(other)||this.endsAfter(other)));
+	}
+
+	public endsWith(other:NumberRange|number|HasStartAndEnd):boolean {
+		return !(this._hasEndBoundary(other))&&(this.hasSameEndAs(other)&&this.startsBefore(other));
+	}
+
+	/** 
+	public intersect(other:NumberRange|HasStartAndEnd):NumberRange|null{
+		return null;
+	}
+	*/
+
+	/**
+	 * 
+	 * @param other 
+	 * @returns how far left the end of this range is from the beginning of the given other value.  A negative value indicates how much the end of this range
+	 * overlaps with the beginning of the other value.  A null value indicates that this starts after or contains the given value 
+	 */
+	public leftOf(other:NumberRange|HasStartAndEnd|number):number|null {
+		if(this.startsAfter(other)||this.hasSameStartAs(other)||this.contains(other)){
+			return null;
+		}
+		return this.distanceBetweenEndToStartOf(other);
+	}
+	/**
+	 * 
+	 * @param other 
+	 * @returns how far right the start of this range is from the end of the given other value.  A negative value indicates how much the start of this range
+	 * overlaps with the beginning of the other value.  A null value indicates that this starts after or contains the given value 
+	 */
+	public rightOf(other:NumberRange|HasStartAndEnd|number):number|null {
+		if(this.hasSameEndAs(other)||this.endsBefore(other)||this.contains(other)){
+			return null;
+		}
+		return this.distanceBetweenStartToEndOf(other);
+	}
+
+
+	/*
+	public difference(other:NumberRange|HasStartAndEnd):NumberRange[]|number{
+		if(this.startsBefore(other)||)
+		if(this.similarTo(other)){
+			return this.start;
+		}
+	}
+	*/
+
+	/*
+	public union(other:NumberRange|HasStartAndEnd):NumberRange|NumberRange[] {
+
+	}
+	*/
+
+	public containedBy(other:NumberRange|HasStartAndEnd):boolean{
 		if(!this.equals(other)){
 			return this._containedByOrIsEqualTo(other);
 		}
+		return false;
 	}
 	
-    get length(){
+    get length():number{
         return this.end-this.start;
     }
 	
+	public similarTo(other:NumberRange|HasStartAndEnd|number):boolean{
+		return this.compareTo(other)===0;
+	}
 	
 	public equals(other:any){
 		if(!(other instanceof NumberRange)){
@@ -223,7 +300,7 @@ export class NumberRange{
 		}
 		return this.compareTo(other)==0;
 	}
-	public compareTo(other:HasStartAndEnd){
+	public compareTo(other:HasStartAndEnd|NumberRange|number):number{
 		return compareRange(this,other);
 	}
 	
@@ -232,24 +309,50 @@ export class NumberRange{
 	}
 
 }
-export function resolveNumber(num:number|ReturnsNumberFunction){
-    if(typeof num==="number"){
-        return num;
-    }
-    return num();
+function _extractStart(val:NumberRange|number|HasStartAndEnd):number{
+	if(typeof val === "number"){
+		return val;
+	}
+	return resolveNumber(val.start);
 }
-export function compareRange(a:HasStartAndEnd,b:HasStartAndEnd){
+function _extractEnd(val:NumberRange|number|HasStartAndEnd):number{
+	if(typeof val === "number"){
+		return val;
+	}
+	return resolveNumber(val.end);
+}
+export function resolveNumber(num:number|ReturnsNumberFunction){
+    dump(num);
+	if(typeof num==="number"){
+        return num;
+    } else if(typeof num==="function"){
+		return num();
+	} else {
+		mp.msg.warn("unknown type for num");
+		dump(num);
+		return 0;
+	}
+    
+}
+
+function lengthOf(a:HasStartAndEnd|NumberRange|number):number{
+	var _start = _extractStart(a);
+	var _end = _extractEnd(a);
+	return _end-_start;
+}
+
+export function compareRange(a:HasStartAndEnd|NumberRange|number,b:HasStartAndEnd|NumberRange|number):number{
 	var cmp=0;
-    var a_start=resolveNumber(a.start);
-    var b_start=resolveNumber(a.start);
+    var a_start=resolveNumber(_extractStart(a));
+    var b_start=resolveNumber(_extractStart(b));
 	if(a_start<b_start){
 		cmp = -1;
 	} else if(b_start<a_start){
 		cmp=1;
 	}
 	if(cmp==0){
-        var a_end=resolveNumber(a.end);
-        var b_end=resolveNumber(b.end);
+        var a_end=resolveNumber(_extractEnd(a));
+        var b_end=resolveNumber(_extractEnd(b));
 		if(a_end>b_end){
 			cmp = -1;
 		} else if(b_end>a_end){

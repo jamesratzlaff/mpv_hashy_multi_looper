@@ -1,7 +1,7 @@
 import { getDataDir } from "./DataDir";
-import {hashFile} from "./FileHasher";
+import { hashFile } from "./FileHasher";
 
-import { file_exists, deleteFileAndCleanUpEmptiness, deleteFile,writeFile } from "./IOUtils";
+import { file_exists, deleteFileAndCleanUpEmptiness, deleteFile, writeFile } from "./IOUtils";
 import { ReturnsNumberFunction, resolveNumber } from "./Range";
 
 var cacheFileExt = ".json";
@@ -60,13 +60,13 @@ class HashCacheData {
     }
 
     private _setFromJson(json: any) {
-        if (json == undefined) {
-            this._hashChangeIndicator = new HashChangeIndicator();
-            this._hash = undefined;
-        } else {
+        if(json && json.hash && json.size && json.mtime){
             this._hashChangeIndicator = new HashChangeIndicator(json);
             this._hash = json.hash;
-        }
+        } else {
+            this._hashChangeIndicator = new HashChangeIndicator();
+            this._hash = undefined;
+        } 
     }
     public getAssociatedFilePath() {
         if (this.filePath != undefined) {
@@ -88,17 +88,28 @@ class HashCacheData {
         }
         return this._hash;
     }
-    public mtime(mtime?: number) {
-        return this._hashChangeIndicator.mtime(mtime);
+
+    get mtime():number {
+        return this._hashChangeIndicator.mtime;
     }
-    public size(size?: number) {
-        return this._hashChangeIndicator.size(size);
+
+    set mtime(mtime:number) {
+        this._hashChangeIndicator.mtime=mtime;
     }
+    get size():number {
+        return this._hashChangeIndicator.size;
+    }
+
+    set size(size:number) {
+        this._hashChangeIndicator.size=size;
+    }
+    
+    
     public hasSameSizeAndMTime(size: HasSizeAndModifiedTime | number, mtime?: number) {
         return this._hashChangeIndicator.sameAs(size, mtime);
     }
     public toJSON() {
-        return { "hash": this.hash(), "size": this.size(), "mtime": this.mtime() };
+        return { "hash": this.hash(), "size": this.size, "mtime": this.mtime };
     }
     selfDelete(cleanUpEmpty: boolean = false) {
 
@@ -119,62 +130,71 @@ class HashCacheData {
             this.filePath = "";
         }
     }
-    
+
 }
 type HasSizeAndModifiedTime = {
     size: number | ReturnsNumberFunction,
     mtime: number | ReturnsNumberFunction
 }
 class HashChangeIndicator {
-    private _size: number;
-    private _mtime: number;
-    constructor(size?: number | HasSizeAndModifiedTime | mp.FileInfo | undefined, mtime?: number) {
+    private _size: number = -1;
+    private _mtime: number = -1;
+    constructor(size?: number | HasSizeAndModifiedTime | mp.FileInfo, mtime?: number) {
         if (typeof size == "object") {
-            mtime = resolveNumber(size.mtime);
-            size = resolveNumber(size.size);
+            if (size.mtime && size.size) {
+                mtime = resolveNumber(size.mtime);
+                size = resolveNumber(size.size);
+            }
         }
-        if(size==undefined){
-            size=0;
-        }
-        this._size = size;
-        this._mtime = mtime !== undefined ? mtime : 0;
-    }
 
-    public size(size?: number) {
-        if (size != undefined) {
-            this._size = size;
-        }
+        this._size = (size !== undefined && (typeof size === "number")) ? size : -1;
+        this._mtime = mtime !== undefined ? mtime : -1;
+    }
+    get size():number {
         return this._size;
     }
 
-    public mtime(mtime?: number) {
-        if (mtime != undefined) {
-            this._mtime = mtime;
-        }
+    set size(size:number) {
+        this._size=size;
+    }
+
+    get mtime():number {
         return this._mtime;
     }
+
+    set mtime(mtime:number) {
+        this._mtime=mtime;
+    }
+    
+
+    
 
     public sameAs(size: HasSizeAndModifiedTime | number, mtime?: number) {
         if (typeof size == "object" && size.size !== undefined && size.mtime != undefined) {
             mtime = resolveNumber(size.mtime);
             size = resolveNumber(size.size);
         }
-        return size == this.size() && mtime == this.mtime();
+        return size == this.size && mtime == this.mtime;
     }
     public equals(other: any) {
         if (other instanceof HashChangeIndicator) {
             return this.sameAs(other);
         }
     }
+
+    get isValid() {
+        return this.size>-1&&this.mtime>-1;
+    }
+
     public toJSON() {
-        return { "size": this.size(), "mtime": this.mtime() };
+        return { "size": this.size, "mtime": this.mtime };
     }
 
 }
 export class HashCache {
     private _ogFilePath: string;
     private _ogSizeAndModifiedTime: HashChangeIndicator;
-    private _hashCacheData: HashCacheData|undefined;
+    private _hashCacheData: HashCacheData | undefined;
     private _hashCacheIsValid: boolean | undefined;
 
     constructor(filePath?: string) {
@@ -203,7 +223,7 @@ export class HashCache {
                 }
             }
         }
-        if (deleteHashCache&&this._hashCacheData!==undefined) {
+        if (deleteHashCache && this._hashCacheData !== undefined) {
             this._hashCacheData.selfDelete();
             this._hashCacheData = undefined;
         }
@@ -222,10 +242,10 @@ export class HashCache {
             this._hashCacheData = new HashCacheData(getHashCacheFilePath(this._ogFilePath));
             var calcHash = hashFile(this._ogFilePath);
             this._hashCacheData.hash(calcHash);
-            this._hashCacheData.mtime(this._ogSizeAndModifiedTime.mtime());
-            this._hashCacheData.size(this._ogSizeAndModifiedTime.size());
+            this._hashCacheData.mtime=this._ogSizeAndModifiedTime.mtime;
+            this._hashCacheData.size=this._ogSizeAndModifiedTime.size
             if (this._hashCacheData.hash()) {
-                
+
                 writeFile(this._hashCacheData.filePath, JSON.stringify(this._hashCacheData));
                 this._hashCacheIsValid = true;
             } else {
