@@ -131,7 +131,13 @@ export class Tags extends AbsUndoable {
         }
 		return reso;
 	}
-
+    public add(tag:Tags|string|string[]):Tags{
+        if(tag instanceof Tags){
+            tag=tag._tags;
+        }
+        this._add(tag);
+        return this;
+    }
 	public copy() {
         var cpy:string[]=[];
 		return new Tags(cpy.concat(this.toJSON()));

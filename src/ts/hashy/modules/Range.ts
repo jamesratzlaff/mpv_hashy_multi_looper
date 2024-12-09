@@ -69,6 +69,49 @@ export class NumberRange{
 		return this;
 	}
 
+	public filterContains(collection:(number|HasStartAndEnd|NumberRange)[]):(number|HasStartAndEnd|NumberRange)[]{
+		if(Array.isArray(collection)){
+			var result = collection.filter(this.contains);
+			return result;
+		}
+		return collection;
+	}
+
+	public getAllContainingMe(collection:(HasStartAndEnd|NumberRange)[]):(HasStartAndEnd|NumberRange)[]{
+		var result = collection.filter(this.containedBy);
+		return result;
+	}
+
+	public getParent(collection:(HasStartAndEnd|NumberRange)[]):HasStartAndEnd|NumberRange|null{
+		var containsMe = this.getAllContainingMe(collection);
+
+		if(containsMe&&containsMe.length>0){
+			if(containsMe.length===1){
+				return containsMe[0];
+			}
+			containsMe.reduce(function(a,b){
+				if(a instanceof NumberRange){
+					if(a.containedBy(b)){
+						return a;
+					}
+					return b;
+				} else if(b instanceof NumberRange){
+					if(b.containedBy(a)){
+						return b;
+					}
+					return a;
+				} else {
+					var aNumRange = new NumberRange(a);
+					if(aNumRange.containedBy(b)){
+						return aNumRange;
+					}
+					return b;
+				}
+			});
+		}
+		return null;
+	}
+
     set start(value:number){        
 		if(value!=this.start){
 			if(value>this.end){
