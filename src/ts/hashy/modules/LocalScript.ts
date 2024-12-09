@@ -5,3 +5,9 @@ export function getScriptDir(){
 	return getDir(mp.get_script_file());
 }
 
+export function getDurationMillis(){
+	var durationStr = mp.get_property("duration/full","0");
+	var duration=parseFloat(durationStr)*1000;
+	return duration;
+}
+

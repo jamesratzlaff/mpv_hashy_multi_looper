@@ -21,8 +21,8 @@ export function createDurationEntry(duration:number, hashPath:string){
 }
 
 export function getDurationEntryPath(duration:number, hashPath:string):string{
-    var hashFileName = mp.utils.split_path(hashPath);
+    var hashFileName = mp.utils.split_path(hashPath)[1];
     var durationDirWithDuration = mp.utils.join_path(getDurationDir(),duration+"");
-    var fullPath = mp.utils.join_path(durationDirWithDuration,hashPath);
+    var fullPath = mp.utils.join_path(durationDirWithDuration,hashFileName);
     return fullPath;
 }

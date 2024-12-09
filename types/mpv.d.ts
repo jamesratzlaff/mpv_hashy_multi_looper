@@ -103,6 +103,28 @@ declare namespace mp {
         key_text?: string | undefined;
     }
 
+    interface InputOpts {
+        prompt: string
+
+    }
+
+    interface IntputGet extends InputOpts {
+        defaultText?: string,
+        submit: (textInput: string) => void,
+        closed?: (textInput: string, cursor_pos: number) => void,
+        cursor_position?: number,
+        opened?: () => void,
+        edited?: (textInput: string) => void,
+        complete?: (textBeforeCursor: string) => any,
+        id?: string | number
+    }
+
+    interface InputSelect extends InputOpts {
+        items: any[],
+        default_item?: number,
+        submit: (selectedItemNo: number) => void,
+    }
+
     function command(command: string): true | undefined;
 
     function commandv(...args: readonly string[]): true | undefined;
@@ -286,7 +308,14 @@ declare namespace mp {
             on_update?: (list: Record<string, boolean | undefined>) => void,
         ): void;
     }
-
+    namespace input {
+        function get(obj:IntputGet):void;
+        function select(obj:InputSelect):void;
+        function terminate():void;
+        function log(message: string, style?: string):void;
+        function log_error(message: string):void;
+        function set_log(log:any):void;
+    }
     namespace utils {
         function getcwd(): string | undefined;
 

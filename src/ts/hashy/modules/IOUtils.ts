@@ -218,10 +218,12 @@ export function createSymlink(actualFilePath:string, linkPath:string):any{
 				"name": "subprocess",
 				"playback_only": false,
 				"capture_stdout": true,
+				"capture_stderr":true,
 				"args": ["ln", "-s", actualFilePath, linkPath]
 			});
 		
 	}
+	dump(lnReso);
 	return lnReso;
 }
 

@@ -4,8 +4,12 @@ const { MetaObj } = require("./modules/MetaObj");
 
 
 function doTheThing(evt){
-	var mo = new MetaObj();
-	dump(mo);
+	//var mo = new MetaObj();
+	dump(mp);
+	//mp.input.get({"prompt":"doodoo","submit":function(e){dump(e)}});
+	//print(JSON.stringify(mo));
+	//print(mp.get_property_number("duration/full"));
+	//print(mp.get_property_native("duration/full"));
 	//var ov = mp.create_osd_overlay("ass-events");
 	//ov.data = "{\\an5}{\\b1}hello world!";
 	//dump(ov);

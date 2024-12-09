@@ -225,7 +225,7 @@ export class Clips implements ClipContainer {
         throw new Error("Method not implemented.");
     }
 
-    toJson() {
+    toJSON() {
         return this.clips;
     }
 
