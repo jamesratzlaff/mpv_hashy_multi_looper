@@ -1,12 +1,26 @@
 var HashCache = require("./modules/HashCache");
 var ioUtils=require("./modules/IOUtils");
 const { MetaObj } = require("./modules/MetaObj");
+var Tags = require("./modules/Tags");
+//var mpUtils = require("./modules/MpUtils");
+var sl = require("./modules/SooperLooper");
 
 
+function observePos(evt){
+	dump(mpUtils.mpUtils);
+}
 function doTheThing(evt){
 	//var mo = new MetaObj();
-	dump(mp);
-	//mp.input.get({"prompt":"doodoo","submit":function(e){dump(e)}});
+	//dump(mp);
+	//var t = new Tags.Tags;//("voodoo","voodoo","poodoo beep"," roooodoo, poodoo-beep    ");
+	//t.promptForTags("Give me you tags!","abcdef","derf");
+	//dump(t.toJSON());
+	//duration=mp.get_property_number("duration",1.0);
+	var sooloo = new sl.SooperLooper();
+	sooloo.enabled=true;
+	//mp.observe_property("percent-pos", "number", observePos);
+
+	//mp.input.get({"prompt":"doodoo","default_text":"weedle,weedlee,weee",submit:function(e){dump(e)}});
 	//print(JSON.stringify(mo));
 	//print(mp.get_property_number("duration/full"));
 	//print(mp.get_property_native("duration/full"));

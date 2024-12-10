@@ -24,7 +24,10 @@ export class NumberRange{
 			objEnd=start.end();
 		}
 		modified=false;
+		start=objStart;
+		end=objEnd;
 	}
+	dump("NumRCtor","start",start);
 	if(start==undefined||isNaN(start)){
 		start=0.0;
 	}

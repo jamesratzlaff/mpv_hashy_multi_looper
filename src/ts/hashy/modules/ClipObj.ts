@@ -1,6 +1,8 @@
 import { NumberRange, HasStartAndEnd, compareRange } from "./Range";
 import { Tags } from "./Tags";
 
+const fullRange=new NumberRange(0.0,100.0);
+
 interface ClipContainer {
     getClipsBefore(clip: HasStartAndEnd): Clip[];
     getClipsAfter(clip: HasStartAndEnd): Clip[];
@@ -13,8 +15,8 @@ interface ClipContainer {
     getNextStart(pos: number): void;
     getPrevEnd(pos: number): void;
     addClip(clip: Clip): void;
-    add(start?:number,end?:number,...tags:string[]):boolean;
-    getInnerMostClipAtPos(pos: number): Clip | undefined;
+    add(start?:number,end?:number,...tags:string[]):Clip;
+    getInnerMostClipAtPos(pos: number): Clip | null;
     getClipsAtPos(pos: number): Clip[];
     markClipStart(pos: number): void;
     markClipEnd(pos: number): void;
@@ -26,6 +28,7 @@ interface ClipContainer {
     getAssumedStartPos(end: number): number;
     getAssumedEndPos(start: number): number;
     rangeAt(value: HasStartAndEnd | Clip | NumberRange): number;
+    get length():number;
 }
 
 export class Clips implements ClipContainer {
@@ -33,14 +36,23 @@ export class Clips implements ClipContainer {
     constructor(clips?: any[]) {
         this._clips = [];
         if (clips) {
+            if(clips instanceof Clips){
+                clips=clips.clips;
+            }
+            dump("Clips_ctor ",clips);
             for (var i = 0; i < clips.length; i++) {
                 var clipJson = clips[i];
                 var clip = undefined;
                 clip = new Clip(clipJson);
+                dump("clipCtor_clip",clip);
                 this._clips.push(clip);
             }
+            dump("Clips_ctor,this.clips",this._clips);
         }
         this.sort();
+    }
+    get length():number{
+        return this._clips.length;
     }
     public rangeAt(value: HasStartAndEnd | Clip | NumberRange): number {
         var result = -1;
@@ -165,8 +177,18 @@ export class Clips implements ClipContainer {
     hasClipWithAlias(alias: string): boolean {
         throw new Error("Method not implemented.");
     }
-    getInnerMostClips(clip: HasStartAndEnd): Clip[] {
-        throw new Error("Method not implemented.");
+    getInnerMostClips(clip: HasStartAndEnd=fullRange): Clip[] {
+        var all = this.clips.filter(function(cl){
+            return cl.containedBy(clip);
+        });
+        dump("all before",all);
+        all = all.filter(function(c){
+            var hashChildren= c.hasChildren(all);
+            return !hashChildren;
+        });
+dump("all after",all);
+        return all;
+
     }
     public getEnabledClips(): Clip[] {
         return this.clips.filter(function (clip) {
@@ -182,8 +204,17 @@ export class Clips implements ClipContainer {
     getPrevEnd(pos: number): void {
         throw new Error("Method not implemented.");
     }
-
-    public add(start?:number,end?:number,...tags:string[]):boolean{
+    getNextClosestClip(pos:number):Clip|undefined{
+        var result = undefined;
+        for(var i=0;result===undefined&&i<this.clips.length;i++){
+            var clip = this.clips[i];
+            if(clip.start>=pos){
+                result = clip;
+            }
+        }
+        return result;
+    }
+    public add(start?:number,end?:number,...tags:string[]):Clip{
         if(start===undefined){
             if(end!==undefined){
                 start=this.getAssumedStartPos(end);
@@ -195,13 +226,19 @@ export class Clips implements ClipContainer {
             }
         }
         var clip=undefined
-        if(start!==undefined&&end!==undefined){
-            clip=new Clip(start,end,tags);
+        if(start===undefined){
+            start=0.0;
         }
+        if(end===undefined){
+            end=100.0;
+        }
+        //if(start!==undefined&&end!==undefined){
+            clip=new Clip(start,end,tags);
+        //}
         return this.addClip(clip);
     }
 
-    addClip(clip: Clip|undefined): boolean {
+    addClip(clip: Clip): Clip {
         var added=false;
         if (clip !== undefined && clip !== null) {
             var existingIndex = this.rangeAt(clip);
@@ -210,13 +247,22 @@ export class Clips implements ClipContainer {
                 this.sort();
                 added=true;
             } else {
-                added=this.clips[existingIndex].acquireTagsIfSimilarRange(clip);
+                clip=this.clips[existingIndex];
+                added=clip.acquireTagsIfSimilarRange(clip);
             }
         }
-        return added;
+        return clip;
     }
-    getInnerMostClipAtPos(pos: number): Clip | undefined {
-        throw new Error("Method not implemented.");
+    getInnerMostClipAtPos(pos: number): Clip | null {
+        var clipsAtPos = this.getClipsAtPos(pos);
+        var result=null;
+        for(var i=0;result===null&&i<clipsAtPos.length;i++){
+            var clip=this.clips[i];
+            if(!clip.hasChildren(clipsAtPos)){
+                result=clip;
+            }
+        }
+        return result;
     }
     markClipStart(pos: number): void {
         throw new Error("Method not implemented.");
@@ -226,6 +272,9 @@ export class Clips implements ClipContainer {
     }
 
     toJSON() {
+        this.clips.sort(function(a:Clip,b:Clip){
+            return compareRange(a.range,b.range);
+        });
         return this.clips;
     }
 
@@ -241,7 +290,7 @@ export class Clip {
 
 
     constructor(start?: any, end?: number, tags?: string[], alias?: string) {
-
+        dump("Clip_ctor","start",start);
         if (typeof start == "object") {
             if (!(start instanceof Clip)) {
                 this._range = new NumberRange(start.start, start.end);
@@ -251,6 +300,7 @@ export class Clip {
                 }
 
             } else {
+                dump("Clip ctor is instanceof Clip");
                 this._range = start._range.copy();
                 this._tags = start._tags.copy();
                 this.enabled = start.enabled;
@@ -334,7 +384,8 @@ export class Clip {
     }
 
     public filterContains(values: (Clip | HasStartAndEnd | number | NumberRange)[]): (Clip | HasStartAndEnd | number | NumberRange)[] {
-        var filtered = values.filter(this.contains);
+       var self = this;
+        var filtered = values.filter(function(el){return self.contains(el)});
         return filtered;
     }
 
@@ -358,6 +409,11 @@ export class Clip {
             }
         }
         return result;
+    }
+
+    public hasChildren(clips:Clip[]) {
+        var childClips = this.getChildClips(clips);
+        return childClips.length!==0;
     }
 
     toJSON(): Object {

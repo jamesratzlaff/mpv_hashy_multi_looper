@@ -182,7 +182,13 @@ export function deleteFileAndCleanUpEmptiness(filePath: string, exclParentPath: 
 		}
 	}
 }
-
+export function lastModifiedTimeMillis(filePath:string):number{
+	var fileInfo = mp.utils.file_info(filePath);
+	if (fileInfo != undefined) {
+		return fileInfo.mtime*1000;
+	}
+	return -1;
+}
 export function deleteFile(filePath: string) {
 	var reso = mp.command_native({
 		"name": "subprocess",

@@ -250,7 +250,7 @@ declare namespace mp {
         fn: (name: string, value: number | undefined) => void,
     ): void;
     function observe_property(name: string, type: "none" | undefined, fn: (name: string) => void): void;
-
+    function unobserve_property(fn: (...args: any[]) => void): void;
     function unobserve_property(fn: (...args: unknown[]) => void): void;
 
     function get_opt(key: string): string;

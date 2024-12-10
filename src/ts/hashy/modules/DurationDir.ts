@@ -13,8 +13,8 @@ export function getDurationDir() {
     return duration_dir;
 }
 
-export function createDurationEntry(duration:number, hashPath:string){
-    var entryPath = getDurationEntryPath(duration,hashPath);
+export function createDurationEntry(durationOrDurationPath:number|string, hashPath:string){
+    var entryPath = typeof durationOrDurationPath ==="number"?getDurationEntryPath(durationOrDurationPath,hashPath):durationOrDurationPath;
     if(!file_exists(entryPath)){
         createSymlink(hashPath,entryPath);
     }
