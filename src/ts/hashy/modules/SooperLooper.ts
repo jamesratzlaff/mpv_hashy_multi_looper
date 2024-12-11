@@ -2,17 +2,16 @@ import { MetaObj } from "./MetaObj";
 import { Clips, Clip } from "./ClipObj";
 
 export class SooperLooper {
-    private _metaobj: MetaObj;
+    private _metaobj: MetaObj|undefined;
     private _enabled: boolean;
     private _clipFacade: Clips | undefined = undefined;
     private _clipIndex: number = -1;
     private _currentClip: Clip | undefined;
-    private _handler: (name: string, value: string | undefined)=> void;
+    private _handler: (name: string, value: number | undefined)=> void;
     constructor() {
-        this._metaobj = new MetaObj();
         this._enabled = false;
         var self = this;
-        this._handler = function(n:string,v:string|undefined):void {
+        this._handler = function(n:string,v:number|undefined):void {
             self._onTimeChangeHandler(n,v);
         }
     }
@@ -21,7 +20,10 @@ export class SooperLooper {
         return this._enabled;
     }
 
-    get metaObj() {
+    get metaObj():MetaObj {
+        if(this._metaobj===undefined){
+            this._metaobj=new MetaObj();
+        }
         return this._metaobj;
     }
 
@@ -40,10 +42,14 @@ export class SooperLooper {
         this._currentClip=clip;
     }
 
-    private _onTimeChangeHandler(name: string, value: string | undefined): void {
-        var val = value!==undefined?parseFloat(value)*1000:undefined;
+    get durationMillis(){
+        return this.metaObj.duration;
+    }
+
+    private _onTimeChangeHandler(name: string, value: number | undefined): void {
+        var val = value!==undefined?value*1000:undefined;
         if(val!==undefined){
-            val=(val/(parseFloat(mp.get_property("duration/full","1"))*1000))*100;
+            val=(val/this.durationMillis)*100;
         }
         dump("value",val);
         if (this.clips.clips.length > 0&&val!==undefined&&val<100) {
@@ -92,7 +98,7 @@ export class SooperLooper {
         if (changed) {
             if (this.enabled) {
                 //mp.observe_property("time-pos", "number", this._onTimeChangeHandler);
-                mp.observe_property("time-pos/full", "string", this._handler);//function(n,v){
+                mp.observe_property("time-pos/full", "number", this._handler);//function(n,v){
                     // self._onTimeChangeHandler(n,v)});
             } else {
                 mp.unobserve_property(this._handler);

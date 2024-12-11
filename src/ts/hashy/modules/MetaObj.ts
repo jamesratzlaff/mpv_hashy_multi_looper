@@ -58,7 +58,7 @@ export class MetaObj {
     get copyOfClips():Clips{
         this._modified=false;
         var cF = new Clips(this.clips.getInnerMostClips());
-        dump("copyOfClips",cF);
+        // dump("copyOfClips",cF);
         return cF;
     }
 

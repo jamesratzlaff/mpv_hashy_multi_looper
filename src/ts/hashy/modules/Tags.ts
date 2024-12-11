@@ -1,11 +1,14 @@
+import { ConcreateChangeNotifier, ModificationChangeNotifier } from "./ChangeListener";
 import { AbsUndoable, UndoItem } from "./Undoable";
-export class Tags extends AbsUndoable {
+export class Tags extends ModificationChangeNotifier {//extends AbsUndoable {
     private _tags: string[] = [];
+    private _initialized: boolean = false;
     constructor(tags: string[] = [], ...more: (Tags | string | string[])[]) {
-        super();
+        super(() => this);
         if (tags) {
             this.add(tags, ...more);
         }
+        this._initialized = true;
     }
 
 
@@ -17,7 +20,7 @@ export class Tags extends AbsUndoable {
         if (this._tags.length > 0) {
             var backUp = this.toJSON();
             this._clear();
-            this.addToUndo(new UndoItem(this, this.clear, this._add, backUp));
+            //this.addToUndo(new UndoItem(this, this.clear, this._add, backUp));
         }
     }
 
@@ -30,43 +33,58 @@ export class Tags extends AbsUndoable {
      * @param tag 
      * @returns 
      */
-    private _add(tag: string | string[] | Tags, ...tags: (string | string[] | Tags)[]): boolean {
+    private _add(tag: string | string[] | Tags, ...tags: (string | string[] | Tags)[]): string[] {
+        var allAdded: string[] = [];
         var reso = this._doAddSingle(tag);
-
+        if (reso.length > 0) {
+            allAdded = allAdded.concat(reso);
+        }
         for (var i = 0; i < tags.length; i++) {
             var t = tags[i];
-            reso = this._doAddSingle(t) || reso;
+            reso = this._doAddSingle(t);
+            if (reso.length > 0) {
+                allAdded = allAdded.concat(reso);
+            }
         }
-        if (reso) {
+        if (allAdded.length > 0) {
             this._tags.sort();
         }
-        return reso;
+        return allAdded;
     }
 
-    private _doAddSingle(tag: string | string[] | Tags): boolean {
-        var reso = false;
+    private _doAddSingle(tag: string | string[] | Tags): string[] {
+        var reso: string[] = [];
         if (tag instanceof Tags) {
             tag = tag._tags;
         }
         if (Array.isArray(tag)) {
             for (var i = 0; i < tag.length; i++) {
                 var t = tag[i];
-                reso = this._doAddSingle(t) || reso;
+                var added = this._doAddSingle(t);
+                if (typeof added === "string") {
+                    reso.push(added);
+                } else if (Array.isArray(added) && added.length > 0) {
+                    reso = reso.concat(added);
+                }
             }
-        }
-        if (typeof tag == "string") {
+        } else if (typeof tag == "string") {
             tag = processValuesString(tag);
             if (tag.length === 1) {
                 tag = tag[0];
                 if (tag.length > 0) {
                     if (this.values().indexOf(tag) === -1) {
                         this._tags.push(tag);
-                        reso = true;
+                        reso.push(tag);
                     }
                 }
             } else {
                 if (tag.length > 1) {
-                    reso = this._doAddSingle(tag) || reso;
+                    var added = this._doAddSingle(tag);
+                    if (typeof added === "string") {
+                        reso.push(added);
+                    } else if (Array.isArray(added) && added.length > 0) {
+                        reso = reso.concat(added);
+                    }
                 }
             }
         }
@@ -76,7 +94,7 @@ export class Tags extends AbsUndoable {
     public replace(tagOrTagIndex: string | number, value: string | null | undefined): boolean {
         var replacedString = this._replace(tagOrTagIndex, value);
         if (replacedString !== undefined) {
-            this.addToUndo(new UndoItem(this, this.replace, (ti: string, v: string) => { this._replace(v, ti) }, tagOrTagIndex, value));
+            //this.addToUndo(new UndoItem(this, this.replace, (ti: string, v: string) => { this._replace(v, ti) }, tagOrTagIndex, value));
             return true;
         }
         return false;
@@ -114,7 +132,7 @@ export class Tags extends AbsUndoable {
     public remove(tagOrTagIndex: string | number, ...others: (string | number)[]): string[] {
         var removed = this._remove(tagOrTagIndex, ...others);
         if (removed) {
-            this.addToUndo(new UndoItem(this, this.remove, this._add, removed));
+            //this.addToUndo(new UndoItem(this, this.remove, this._add, removed));
         }
         return removed;
     }
@@ -143,18 +161,26 @@ export class Tags extends AbsUndoable {
         }
         return reso;
     }
+
+    protected _setModified(func?: any, ...args: any[]) {
+        if (this._initialized) {
+            super._setModified(func,...args);
+        }
+    }
+
     public add(tag: Tags | string | string[], ...tags: (Tags | string | string[])[]): Tags {
         if (tag instanceof Tags) {
             tag = tag._tags;
         }
         this._add(tag, ...tags);
+
         return this;
     }
     public copy() {
         var cpy: string[] = [];
         return new Tags(cpy.concat(this.toJSON()));
     }
-    public test(predicate:(arrPredicate:string[])=>boolean=(function(p){return true;})):boolean{
+    public test(predicate: (arrPredicate: string[]) => boolean = (function (p) { return true; })): boolean {
         return predicate(this.values());
     }
     public promptForTags(displayText = "tags", ...additionalDefaultTags: string[]): void {

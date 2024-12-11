@@ -4,20 +4,34 @@ const { MetaObj } = require("./modules/MetaObj");
 var Tags = require("./modules/Tags");
 //var mpUtils = require("./modules/MpUtils");
 var sl = require("./modules/SooperLooper");
+var derps = require("./modules/TestListener");
 
 
 function observePos(evt){
 	dump(mpUtils.mpUtils);
 }
 function doTheThing(evt){
+	var notifier1=new derps.DerpNotifier("pee");
+	var composite1=new derps.DerpBoth("diarrhea");
+	var observer1=new derps.DerpObserver("poo");
+	
+	composite1.observe(notifier1);
+	observer1.observe(composite1);
+
+	dump("notifier1",notifier1);
+	dump("composite1",composite1);
+	dump("observer1",observer1),
+	notifier1.notifyObserversUsingEventNamed("doo doo");
+
+
 	//var mo = new MetaObj();
 	//dump(mp);
 	//var t = new Tags.Tags;//("voodoo","voodoo","poodoo beep"," roooodoo, poodoo-beep    ");
 	//t.promptForTags("Give me you tags!","abcdef","derf");
 	//dump(t.toJSON());
 	//duration=mp.get_property_number("duration",1.0);
-	var sooloo = new sl.SooperLooper();
-	sooloo.enabled=true;
+	//var sooloo = new sl.SooperLooper();
+	//sooloo.enabled=true;
 	//mp.observe_property("percent-pos", "number", observePos);
 
 	//mp.input.get({"prompt":"doodoo","default_text":"weedle,weedlee,weee",submit:function(e){dump(e)}});

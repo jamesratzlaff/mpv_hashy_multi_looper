@@ -1,7 +1,8 @@
+import { AssignableHandlerNotifierAndObserver } from "./ChangeListener";
 import { NumberRange, HasStartAndEnd, compareRange } from "./Range";
 import { Tags } from "./Tags";
 
-const fullRange=new NumberRange(0.0,100.0);
+const fullRange = new NumberRange(0.0, 100.0);
 
 interface ClipContainer {
     getClipsBefore(clip: HasStartAndEnd): Clip[];
@@ -15,7 +16,7 @@ interface ClipContainer {
     getNextStart(pos: number): void;
     getPrevEnd(pos: number): void;
     addClip(clip: Clip): void;
-    add(start?:number,end?:number,...tags:string[]):Clip;
+    add(start?: number, end?: number, ...tags: string[]): Clip;
     getInnerMostClipAtPos(pos: number): Clip | null;
     getClipsAtPos(pos: number): Clip[];
     markClipStart(pos: number): void;
@@ -28,7 +29,7 @@ interface ClipContainer {
     getAssumedStartPos(end: number): number;
     getAssumedEndPos(start: number): number;
     rangeAt(value: HasStartAndEnd | Clip | NumberRange): number;
-    get length():number;
+    get length(): number;
 }
 
 export class Clips implements ClipContainer {
@@ -36,22 +37,22 @@ export class Clips implements ClipContainer {
     constructor(clips?: any[]) {
         this._clips = [];
         if (clips) {
-            if(clips instanceof Clips){
-                clips=clips.clips;
+            if (clips instanceof Clips) {
+                clips = clips.clips;
             }
-            dump("Clips_ctor ",clips);
+            dump("Clips_ctor ", clips);
             for (var i = 0; i < clips.length; i++) {
                 var clipJson = clips[i];
                 var clip = undefined;
                 clip = new Clip(clipJson);
-                dump("clipCtor_clip",clip);
+                dump("clipCtor_clip", clip);
                 this._clips.push(clip);
             }
-            dump("Clips_ctor,this.clips",this._clips);
+            dump("Clips_ctor,this.clips", this._clips);
         }
         this.sort();
     }
-    get length():number{
+    get length(): number {
         return this._clips.length;
     }
     public rangeAt(value: HasStartAndEnd | Clip | NumberRange): number {
@@ -177,16 +178,16 @@ export class Clips implements ClipContainer {
     hasClipWithAlias(alias: string): boolean {
         throw new Error("Method not implemented.");
     }
-    getInnerMostClips(clip: HasStartAndEnd=fullRange): Clip[] {
-        var all = this.clips.filter(function(cl){
+    getInnerMostClips(clip: HasStartAndEnd = fullRange): Clip[] {
+        var all = this.clips.filter(function (cl) {
             return cl.containedBy(clip);
         });
-        dump("all before",all);
-        all = all.filter(function(c){
-            var hashChildren= c.hasChildren(all);
+        // dump("all before", all);
+        all = all.filter(function (c) {
+            var hashChildren = c.hasChildren(all);
             return !hashChildren;
         });
-dump("all after",all);
+        // dump("all after", all);
         return all;
 
     }
@@ -204,62 +205,62 @@ dump("all after",all);
     getPrevEnd(pos: number): void {
         throw new Error("Method not implemented.");
     }
-    getNextClosestClip(pos:number):Clip|undefined{
+    getNextClosestClip(pos: number): Clip | undefined {
         var result = undefined;
-        for(var i=0;result===undefined&&i<this.clips.length;i++){
+        for (var i = 0; result === undefined && i < this.clips.length; i++) {
             var clip = this.clips[i];
-            if(clip.start>=pos){
+            if (clip.start >= pos) {
                 result = clip;
             }
         }
         return result;
     }
-    public add(start?:number,end?:number,...tags:string[]):Clip{
-        if(start===undefined){
-            if(end!==undefined){
-                start=this.getAssumedStartPos(end);
+    public add(start?: number, end?: number, ...tags: string[]): Clip {
+        if (start === undefined) {
+            if (end !== undefined) {
+                start = this.getAssumedStartPos(end);
             }
         }
-        if(end===undefined){
-            if(start!==undefined){
-                end=this.getAssumedEndPos(start);
+        if (end === undefined) {
+            if (start !== undefined) {
+                end = this.getAssumedEndPos(start);
             }
         }
-        var clip=undefined
-        if(start===undefined){
-            start=0.0;
+        var clip = undefined
+        if (start === undefined) {
+            start = 0.0;
         }
-        if(end===undefined){
-            end=100.0;
+        if (end === undefined) {
+            end = 100.0;
         }
         //if(start!==undefined&&end!==undefined){
-            clip=new Clip(start,end,tags);
+        clip = new Clip(start, end, tags);
         //}
         return this.addClip(clip);
     }
 
     addClip(clip: Clip): Clip {
-        var added=false;
+        var added = false;
         if (clip !== undefined && clip !== null) {
             var existingIndex = this.rangeAt(clip);
             if (existingIndex != -1) {
                 this.clips.push(clip);
                 this.sort();
-                added=true;
+                added = true;
             } else {
-                clip=this.clips[existingIndex];
-                added=clip.acquireTagsIfSimilarRange(clip);
+                clip = this.clips[existingIndex];
+                added = clip.acquireTagsIfSimilarRange(clip);
             }
         }
         return clip;
     }
     getInnerMostClipAtPos(pos: number): Clip | null {
         var clipsAtPos = this.getClipsAtPos(pos);
-        var result=null;
-        for(var i=0;result===null&&i<clipsAtPos.length;i++){
-            var clip=this.clips[i];
-            if(!clip.hasChildren(clipsAtPos)){
-                result=clip;
+        var result = null;
+        for (var i = 0; result === null && i < clipsAtPos.length; i++) {
+            var clip = this.clips[i];
+            if (!clip.hasChildren(clipsAtPos)) {
+                result = clip;
             }
         }
         return result;
@@ -272,8 +273,8 @@ dump("all after",all);
     }
 
     toJSON() {
-        this.clips.sort(function(a:Clip,b:Clip){
-            return compareRange(a.range,b.range);
+        this.clips.sort(function (a: Clip, b: Clip) {
+            return compareRange(a.range, b.range);
         });
         return this.clips;
     }
@@ -281,7 +282,7 @@ dump("all after",all);
 }
 
 
-export class Clip {
+export class Clip extends AssignableHandlerNotifierAndObserver{
     private _range: NumberRange = new NumberRange();
     private _tags: Tags = new Tags();
     private _alias: string | undefined = "";
@@ -290,7 +291,8 @@ export class Clip {
 
 
     constructor(start?: any, end?: number, tags?: string[], alias?: string) {
-        dump("Clip_ctor","start",start);
+        super(undefined,()=>this);
+        //dump("Clip_ctor", "start", start);
         if (typeof start == "object") {
             if (!(start instanceof Clip)) {
                 this._range = new NumberRange(start.start, start.end);
@@ -373,19 +375,19 @@ export class Clip {
      * @param clips 
      * @returns all tags for this clip which includes this clips individual tags and all parents of this clip's tags
      */
-    public getAllTags(clips:Clip[]){
+    public getAllTags(clips: Clip[]) {
         var all = new Tags();
         all.add(this.tags);
         var parentClips = this.getClipsContainingMe(clips);
-        parentClips.forEach(function(parentClip){
+        parentClips.forEach(function (parentClip) {
             all.add(parentClip.tags);
         });
         return all;
     }
 
     public filterContains(values: (Clip | HasStartAndEnd | number | NumberRange)[]): (Clip | HasStartAndEnd | number | NumberRange)[] {
-       var self = this;
-        var filtered = values.filter(function(el){return self.contains(el)});
+        var self = this;
+        var filtered = values.filter(function (el) { return self.contains(el) });
         return filtered;
     }
 
@@ -411,9 +413,9 @@ export class Clip {
         return result;
     }
 
-    public hasChildren(clips:Clip[]) {
+    public hasChildren(clips: Clip[]) {
         var childClips = this.getChildClips(clips);
-        return childClips.length!==0;
+        return childClips.length !== 0;
     }
 
     toJSON(): Object {

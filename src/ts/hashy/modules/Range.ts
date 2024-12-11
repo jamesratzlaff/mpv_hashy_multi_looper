@@ -1,3 +1,5 @@
+import { ConcreateChangeNotifier } from "./ChangeListener";
+
 export type ReturnsNumberFunction = ()=>number;
 
 export type HasStartAndEnd ={
@@ -7,12 +9,13 @@ export type HasStartAndEnd ={
 
 
 
-export class NumberRange{
+export class NumberRange extends ConcreateChangeNotifier{
 	private _modified=true;
     
-    private _start: number;
-    private _end: number;
+    protected _start: number;
+    protected _end: number;
     constructor(start:any=0, end?:number){
+	super();
     var modified=false;
 	if(typeof start == "object"){
 		var objStart = start.start;
@@ -27,7 +30,7 @@ export class NumberRange{
 		start=objStart;
 		end=objEnd;
 	}
-	dump("NumRCtor","start",start);
+	// dump("NumRCtor","start",start);
 	if(start==undefined||isNaN(start)){
 		start=0.0;
 	}
@@ -123,7 +126,7 @@ export class NumberRange{
 			} else {
 				this._start=value;
 			}
-			this._modified=true;
+			this.setModified(this.start,value);
 		}
 		
     }
@@ -155,10 +158,19 @@ export class NumberRange{
 			}else {
 				this._end=value;
 			}
-			this._modified=true;
-			
+			this.setModified(this.end,value);			
 		}
     }
+	private setModified(func?:any,...args:any[]){
+		this._modified=true;
+		var name=undefined;
+		if(typeof func==="function"){
+			name=func.name;
+		} else if(func!==undefined){
+			name=(func).toString();
+		}
+		this.notifyObserversUsingEventNamed(name,...args);
+	}
 	
     /**
      * 
@@ -182,7 +194,7 @@ export class NumberRange{
 		if(amt!=0){
 			this._start=this.start+amt;
 			this._end=this.end+amt;
-			this._modified=true;
+			this.setModified(this.offset,amt);
 		}
 		return this;
 	}
@@ -198,7 +210,7 @@ export class NumberRange{
 		if(scale!=0&&scale!=1){
 			this._start=this.start*scale;
 			this._end=this.end*scale;
-			this._modified=true;
+			this.setModified(this.scale,scale);
 		}
 		return this;
 	}
@@ -368,7 +380,7 @@ function _extractEnd(val:NumberRange|number|HasStartAndEnd):number{
 	return resolveNumber(val.end);
 }
 export function resolveNumber(num:number|ReturnsNumberFunction){
-    dump(num);
+    dump("resolveNumber",num);
 	if(typeof num==="number"){
         return num;
     } else if(typeof num==="function"){
