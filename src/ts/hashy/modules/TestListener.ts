@@ -1,6 +1,6 @@
-import { AbstractChangeObserver, CompositeNotifierAndObserver, ConcreateChangeNotifier, IChangeEvent } from "./ChangeListener";
+import { AbstractChangeObserver, CompositeNotifierAndObserver, ConcreteChangeNotifier, IChangeEvent } from "./ChangeListener";
 
-export class DerpNotifier extends ConcreateChangeNotifier {
+export class DerpNotifier extends ConcreteChangeNotifier {
     readonly name; 
     constructor(name:string){
         super(()=>this);

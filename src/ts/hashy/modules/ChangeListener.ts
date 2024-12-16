@@ -188,11 +188,11 @@ export interface ChangeNotifier extends IBaseMuteAndQueueOptions<IChangeEvent> {
     notifyObserversUsingEventNamed(name: string, ...values: any[]): void;
     notifyObservers(...values: any[]): void;
     notifyObserversOfFunctionCall(functionCalled: Function, ...args: any[]): void;
-    removeAllObservers(): void;
+    removeAllObservers(recurse?: boolean): void;
     isNotifying(observer: ChangeObserver): boolean;
+    disallowAdditionOfObservers(disallow?: boolean, recurse?: boolean): boolean;
     get observers(): ChangeObserver[];
     get muteAndQueueOptions(): IMuteAndQueueOptions<IChangeEvent> | undefined;
-
 
 }
 
@@ -200,6 +200,7 @@ export abstract class AbstractChangeNotifier implements ChangeNotifier {
     private _observers: ChangeObserver[];
     private _self: ChangeNotifier | undefined | (() => ChangeNotifier);
     private _muteAndQueueOptions?: IMuteAndQueueOptions<IChangeEvent>;
+    private _disallowAdditionOfObservers: boolean = false;
     readonly mySink = ((event: IChangeEvent | undefined) => {
         if (event !== undefined) {
             this.self.observers.forEach((observer) => observer.onEvent(event));
@@ -211,6 +212,27 @@ export abstract class AbstractChangeNotifier implements ChangeNotifier {
             this.self = self;
         }
     }
+    disallowAdditionOfObservers(disallow?: boolean, recurse: boolean=true): boolean {
+        if(arguments.length===0){
+            return this._disallowAdditionOfObservers;
+        }
+        if (disallow!==undefined&&disallow != this._disallowAdditionOfObservers) {
+            this._disallowAdditionOfObservers = disallow;
+            if(this._disallowAdditionOfObservers){
+                if (recurse) {
+                    this.observers.forEach((ob)=>{
+                        if(ob instanceof CompositeNotifierAndObserver){
+                            ob.disallowAdditionOfObservers(disallow,recurse);
+                        }
+                    });
+                }
+                this.removeAllObservers();
+            }
+            
+        }
+        return this._disallowAdditionOfObservers;
+    }
+
 
     private get forceMuteAndQueueOptions(): IMuteAndQueueOptions<IChangeEvent> {
         var reso = this.muteAndQueueOptions;
@@ -228,7 +250,7 @@ export abstract class AbstractChangeNotifier implements ChangeNotifier {
         }
         return this._muteAndQueueOptions;
     }
-    
+
     get queuing(): boolean {
         if (this.muteAndQueueOptions === undefined) {
             return DEFAULT_QUEUING;
@@ -243,17 +265,19 @@ export abstract class AbstractChangeNotifier implements ChangeNotifier {
             return this.muteAndQueueOptions.muted;
         }
     }
-    
-    mute(queue?: boolean): void {
+
+    mute(queue?: boolean): this {
         if (!this.muted) {
             this.forceMuteAndQueueOptions.mute(queue);
         }
+        return this;
     }
-    unmute(drainQueue?: boolean): void {
+    unmute(drainQueue?: boolean): this {
         if (this.muted) {
             this.muteAndQueueOptions?.unmute(drainQueue);
             this.muteAndQueueOptions;
         }
+        return this;
     }
     // drainQueue(): void {
     //     var muteOpts = this.muteAndQueueOptions;
@@ -305,11 +329,18 @@ export abstract class AbstractChangeNotifier implements ChangeNotifier {
         if (this.isMe(observer)) {
             return;
         }
-        if (!this.isNotifying(observer)) {
-            this.observers.push(observer);
-        }
-        if (!observer.isObserving(this.self)) {
-            observer.observe(this.self);
+        if (this._disallowAdditionOfObservers) {
+            observer.unobserve(this);
+            if(observer instanceof AbstractChangeNotifier||observer instanceof CompositeNotifierAndObserver){
+                observer.disallowAdditionOfObservers(true);
+            }
+        } else {
+            if (!this.isNotifying(observer)) {
+                this.observers.push(observer);
+            }
+            if (!observer.isObserving(this.self)) {
+                observer.observe(this.self);
+            }
         }
     }
     createEvent(name: string | Function, ...values: any[]): IChangeEvent {
@@ -360,11 +391,16 @@ export abstract class AbstractChangeNotifier implements ChangeNotifier {
         }
         return evt;
     }
-    removeAllObservers(): void {
+    removeAllObservers(recurse: boolean = false): void {
         while (this.observers.length > 0) {
             let observer: ChangeObserver | undefined = this.observers.pop();
             if (observer !== undefined) {
                 this.removeObserver(observer);
+                if (recurse) {
+                    if (observer instanceof AbstractChangeNotifier) {
+                        observer.removeAllObservers(recurse);
+                    }
+                }
             }
         }
 
@@ -375,7 +411,7 @@ export abstract class AbstractChangeNotifier implements ChangeNotifier {
 
 }
 
-export class ConcreateChangeNotifier extends AbstractChangeNotifier {
+export class ConcreteChangeNotifier extends AbstractChangeNotifier {
     constructor(self?: ChangeNotifier | (() => ChangeNotifier)) {
         super(self !== undefined ? self : () => this);
         if (self !== undefined) {
@@ -384,7 +420,7 @@ export class ConcreateChangeNotifier extends AbstractChangeNotifier {
     }
 }
 
-export class ModificationChangeNotifier extends ConcreateChangeNotifier {
+export class ModificationChangeNotifier extends ConcreteChangeNotifier {
     constructor(self?: ChangeNotifier | (() => ChangeNotifier)) {
         super(self !== undefined ? self : () => this);
         if (self !== undefined) {
@@ -507,12 +543,15 @@ export abstract class CompositeNotifierAndObserver extends AbstractChangeObserve
     private changeNotifier: ChangeNotifier;
     constructor(self?: ChangeNotifier & ChangeObserver | (() => ChangeNotifier & ChangeObserver)) {
         super(self);
-        this.changeNotifier = new ConcreateChangeNotifier(() => this.mySelf);
+        this.changeNotifier = new ModificationChangeNotifier(() => this.mySelf);
+    }
+    disallowAdditionOfObservers(disallow?: boolean, recurse?: boolean): boolean {
+       return this.changeNotifier.disallowAdditionOfObservers(disallow,recurse);
     }
     get muteAndQueueOptions(): IMuteAndQueueOptions<IChangeEvent> | undefined {
         return this.changeNotifier.muteAndQueueOptions;
     }
-    
+
     get queuing(): boolean {
         return this.changeNotifier.queuing;
     }
@@ -525,7 +564,7 @@ export abstract class CompositeNotifierAndObserver extends AbstractChangeObserve
     unmute(drainQueue?: boolean): void {
         this.changeNotifier.unmute(drainQueue);
     }
-    
+
     get queueIsDraining(): boolean {
         throw new Error("Method not implemented.");
     }

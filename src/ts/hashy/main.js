@@ -4,7 +4,10 @@ const { MetaObj } = require("./modules/MetaObj");
 var Tags = require("./modules/Tags");
 //var mpUtils = require("./modules/MpUtils");
 var sl = require("./modules/SooperLooper");
+var CL = require("./modules/ClipObj");
 var derps = require("./modules/TestListener");
+const { StopWatch,doTest } = require("./modules/Sortables");
+
 
 
 function observePos(evt){
@@ -14,6 +17,13 @@ function doTheThing(evt){
 	var notifier1=new derps.DerpNotifier("pee");
 	var composite1=new derps.DerpBoth("diarrhea");
 	var observer1=new derps.DerpObserver("poo");
+	var clips = new CL.Clips();
+	clips.add(20,50);
+	clips.add(20,50,"doo doo","voo doo");
+	clips.add(20,50,"doo doo","poo doo");
+	clips.add(10,30);
+	clips.add(20,30);
+	clips.add(80,90);
 	
 	composite1.observe(notifier1);
 	observer1.observe(composite1);
@@ -22,16 +32,26 @@ function doTheThing(evt){
 	dump("composite1",composite1);
 	dump("observer1",observer1),
 	notifier1.notifyObserversUsingEventNamed("doo doo");
+	//mp.set_property_number("speed",8.0);
+	//var r = mp.get_property_number("video-rotate");
+	//dump(r);
+	// mp.set_property_native("video-rotate",r+90);
+	//mp.set_property_native("video-pan-x",.50);
+	dump(mp.get_property_native("video-crop"));
+	// mp.set_property_native("video-crop","20%x20%+100");
+	// mp.set_property_native("play-direction","-");
 
 
-	//var mo = new MetaObj();
+
+
+	var mo = new MetaObj();
 	//dump(mp);
 	//var t = new Tags.Tags;//("voodoo","voodoo","poodoo beep"," roooodoo, poodoo-beep    ");
 	//t.promptForTags("Give me you tags!","abcdef","derf");
 	//dump(t.toJSON());
 	//duration=mp.get_property_number("duration",1.0);
-	//var sooloo = new sl.SooperLooper();
-	//sooloo.enabled=true;
+	
+	
 	//mp.observe_property("percent-pos", "number", observePos);
 
 	//mp.input.get({"prompt":"doodoo","default_text":"weedle,weedlee,weee",submit:function(e){dump(e)}});
@@ -78,4 +98,8 @@ mp.msg.info("nerp");
 	*/
 }
 
-mp.register_event("file-loaded", doTheThing);
+var sooperLooper = sl.SOOPER_LOOPER;
+sooperLooper.loops_enabled=true;
+// print("script name",mp.get_script_name());
+// sl.bindKeys();
+//mp.register_event("file-loaded", doTheThing);

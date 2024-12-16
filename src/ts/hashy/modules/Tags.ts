@@ -1,17 +1,24 @@
-import { ConcreateChangeNotifier, ModificationChangeNotifier } from "./ChangeListener";
+import { ConcreteChangeNotifier, ModificationChangeNotifier } from "./ChangeListener";
 import { AbsUndoable, UndoItem } from "./Undoable";
 export class Tags extends ModificationChangeNotifier {//extends AbsUndoable {
     private _tags: string[] = [];
     private _initialized: boolean = false;
-    constructor(tags: string[] = [], ...more: (Tags | string | string[])[]) {
+    constructor(tags: boolean|string|Tags|string[] = [], ...more: (Tags | string | string[])[]) {
         super(() => this);
-        if (tags) {
+        if(typeof tags === "boolean"){
+            if(tags){
+                this.mute();
+            }
+        } else if(tags){
             this.add(tags, ...more);
         }
+        
         this._initialized = true;
     }
 
-
+    get length(){
+        return this.values.length;
+    }
     public values(): string[] {
         return this._tags;
     }
@@ -19,7 +26,9 @@ export class Tags extends ModificationChangeNotifier {//extends AbsUndoable {
     public clear() {
         if (this._tags.length > 0) {
             var backUp = this.toJSON();
+
             this._clear();
+            this._setModified(this.remove,backUp.shift(),backUp);
             //this.addToUndo(new UndoItem(this, this.clear, this._add, backUp));
         }
     }
@@ -162,23 +171,23 @@ export class Tags extends ModificationChangeNotifier {//extends AbsUndoable {
         return reso;
     }
 
-    protected _setModified(func?: any, ...args: any[]) {
-        if (this._initialized) {
-            super._setModified(func,...args);
-        }
-    }
+    
 
     public add(tag: Tags | string | string[], ...tags: (Tags | string | string[])[]): Tags {
         if (tag instanceof Tags) {
             tag = tag._tags;
         }
-        this._add(tag, ...tags);
-
+        var added = this._add(tag, ...tags);
+        if(added.length>0){
+            if(this._initialized){
+                this._setModified(this.add,added);
+            }
+        }
         return this;
     }
-    public copy() {
-        var cpy: string[] = [];
-        return new Tags(cpy.concat(this.toJSON()));
+    public copy(mute:boolean=false) {
+        var cpy = mute? new Tags(mute,this.values().slice(0)):new Tags(this.values().slice(0));
+        return cpy;
     }
     public test(predicate: (arrPredicate: string[]) => boolean = (function (p) { return true; })): boolean {
         return predicate(this.values());

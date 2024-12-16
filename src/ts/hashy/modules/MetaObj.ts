@@ -17,6 +17,7 @@ export class MetaObj {
     private _description_tags: Tags | undefined;
     private _jsonMtime: number;
     private _modified:boolean;
+    private _saveOnModify:boolean=false;
 
     constructor(filepath?: string, duration?: number) {
         this._filepath = filepath !== undefined ? filepath : mp.get_property("path", "/dev/null");
@@ -57,7 +58,7 @@ export class MetaObj {
 
     get copyOfClips():Clips{
         this._modified=false;
-        var cF = new Clips(this.clips.getInnerMostClips());
+        var cF = new Clips(this.clips.getInnerMostClips(),true);
         // dump("copyOfClips",cF);
         return cF;
     }
@@ -115,6 +116,20 @@ export class MetaObj {
     private updateOrInitialize(): void {
         this.initialize();
         this._loadOrCreateJsonIfNecessary();
+    }
+
+    get saveOnModify():boolean {
+        return this._saveOnModify;
+    }
+
+    set saveOnModify(som:boolean) {
+        if(som!==this.saveOnModify){
+            this._saveOnModify=som;
+            if(this.saveOnModify&&this.modified){
+                this.save();
+                this._modified=false;
+            }
+        }
     }
 
     public save(): MetaObj {
