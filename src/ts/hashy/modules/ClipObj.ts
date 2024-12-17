@@ -67,7 +67,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
 
         this.sort();
         var me = this;
-        
+
         // this.prependHandler(function (evt) {
         //     if (evt.source instanceof NumberRange) {
         //         me.sort();
@@ -75,7 +75,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         // });
         // this.clips.forEach((clip)=>clip.addObserver(this.self));
     }
-    
+
 
     get minVal(): number | undefined {
         var head = this._head;
@@ -91,7 +91,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
     public indexOf(clip: Clip): number {
         var result = -1;
         if (this._isSorted) {
-            var idx = binarySearchWithComparator(clip.range, this.clips, Clip.COMPARE);//this.clips.indexOf(clip);
+            var idx = binarySearchWithComparator(clip, this.clips, Clip.COMPARE);//this.clips.indexOf(clip);
             if (idx >= 0) {
                 result = idx;
             }
@@ -99,6 +99,38 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
             result = this.clips.indexOf(clip);
         }
         return -1;
+    }
+
+    public getNext(clip: Clip | number | undefined) {
+        return this.getPreviousOrNext(clip,true);
+
+    }
+    public getPrev(clip: Clip | number | undefined){
+        return this.getPreviousOrNext(clip,false);
+    }
+
+    private getPreviousOrNext(clip: Clip | number | undefined, forward: boolean):Clip|undefined {
+        let dir = forward ? 1 : -1;
+        let num = NaN;
+        if (typeof clip === "number") {
+            num = clip;
+            let numberGettingFunction: (loc: number) => Clip | undefined = forward ? this.getNextClosestClip : this.getPrevClosestClip;
+            clip = numberGettingFunction.apply(this, [clip]);
+            return clip;
+        }
+        if (clip !== undefined) {
+            var clipLoc = binarySearchWithComparator(clip, this.clips, Clip.COMPARE);
+            if(clipLoc>-1){
+                if(clipLoc===0&&!forward){
+                    return undefined;
+                }
+                if(clipLoc===this.length-1&&forward){
+                    return undefined;
+                }
+                return this.clips[clipLoc+dir];
+            }
+        }
+
     }
 
     public rangeAt(value: HasStartAndEnd | Clip | NumberRange | number): number {
@@ -223,7 +255,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         //let idx = this._getClipIdx(clip,(c,cl)=>cl.contains(c),-1);
 
         var clips = this.clips.filter(function (c) {
-            c.contains(clip);
+            return c.contains(clip);
         });
         return clips;
     }
@@ -315,6 +347,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
     getNextClipBoundary(pos: number): number {
         var result = undefined;
         var clip: Clip | null | undefined = this.getInnerMostClipAtPos(pos);
+        dump("getNextClipBoundary", "clip", clip);
         if (clip !== undefined && clip !== null) {
             result = clip.end;
         }
@@ -352,7 +385,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         var result = undefined;
         for (var i = 0; result === undefined && i < this.clips.length; i++) {
             var clip = this.clips[i];
-            if (clip.start >= pos) {
+            if (clip.start > pos) {
                 result = clip;
             }
         }
@@ -535,7 +568,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
             // }
         }
         if (added) {
-            this.notifyWithThis("addClip",clip);
+            this.notifyWithThis("addClip", clip);
             // this.notifyObserversUsingEventNamed("addClip", clip);
         }
         return clip;
@@ -543,6 +576,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
     getInnerMostClipAtPos(pos: number): Clip | null {
         var clipsAtPos = this.getClipsAtPos(pos);
         var result = null;
+        dump("getInnerMostClipAtPos", "pos", pos, "clipsAtPos", clipsAtPos);
         for (var i = 0; result === null && i < clipsAtPos.length; i++) {
             var clip = this.clips[i];
             if (!clip.hasChildren(clipsAtPos)) {
@@ -653,7 +687,7 @@ export class Clip extends BaseEventListener implements HasNotifier {
     set enabled(enabled: boolean) {
         if (enabled !== this.enabled) {
             this._enabled = enabled;
-            this.notifyWithThis("enabled",enabled);
+            this.notifyWithThis("enabled", enabled);
         }
     }
     get range(): NumberRange {

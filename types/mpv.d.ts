@@ -103,20 +103,33 @@ declare namespace mp {
         key_text?: string | undefined;
     }
 
+   
     interface InputOpts {
-        prompt: string
-
+        prompt?: string
     }
+    interface StringInputOpts extends InputOpts  {
+        default_text?:string,
+        id?:string,
+    }
+    interface NumberInputOpts  {
+        cursor_position?:number;
+    }
+    interface CallbackInputOpts {
+        submit:(textInput: string) => void;
+        edited?: (textInput: string, something:any) => void,
+        closed?:(textInput: string, cursorPos:number)=>void,
+        complete?:(textBeforeTheCursor:string)=>Record<string,number>
+    }
+    interface IntputGet extends StringInputOpts,NumberInputOpts,CallbackInputOpts {
 
-    interface IntputGet extends InputOpts {
-        default_text?: string,
-        submit: (textInput: string) => void,
-        closed?: (textInput: string, cursor_pos: number) => void,
-        cursor_position?: number,
-        opened?: () => void,
-        edited?: (textInput: string) => void,
-        complete?: (textBeforeCursor: string) => any,
-        id?: string | number
+        // default_text?: string,
+        // submit: (textInput: string) => void,
+        // closed?: (textInput: string, cursor_pos: number) => void,
+        // cursor_position?: number,
+        // opened?: () => void,
+        // edited?: (textInput: string) => void,
+        // complete?: (textBeforeCursor: string) => any,
+        // id?: string | number
     }
 
     interface InputSelect extends InputOpts {

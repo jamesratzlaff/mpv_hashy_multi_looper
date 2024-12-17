@@ -4,22 +4,22 @@ import { BaseEventListener, EventNotifier, HandlesEvent, HasNotifier } from "./E
 export class Tags extends BaseEventListener implements HasNotifier {//extends AbsUndoable {
     private _tags: string[] = [];
     private _initialized: boolean = false;
-    
-    constructor(tags: boolean|string|Tags|string[] = [], ...more: (Tags | string | string[])[]) {
+
+    constructor(tags: boolean | string | Tags | string[] = [], ...more: (Tags | string | string[])[]) {
         super();
-        if(typeof tags === "boolean"){
-            if(tags){
+        if (typeof tags === "boolean") {
+            if (tags) {
                 this.mute();
             }
-        } else if(tags){
+        } else if (tags) {
             this.add(tags, ...more);
         }
-        
+
         this._initialized = true;
     }
-    
 
-    get length(){
+
+    get length() {
         return this.values.length;
     }
     public values(): string[] {
@@ -31,15 +31,15 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
             var backUp = this.toJSON();
 
             this._clear();
-            this._setModified("remove",backUp.shift(),backUp);
+            this._setModified("remove", backUp.shift(), backUp);
             //this.addToUndo(new UndoItem(this, this.clear, this._add, backUp));
         }
     }
-    
-    _setModified(name:string,...args:any[]){
-        this.notifyWithThis(name,...args);
+
+    _setModified(name: string, ...args: any[]) {
+        this.notifyWithThis(name, ...args);
     }
-   
+
     private _clear() {
         this._tags = [];
     }
@@ -148,7 +148,7 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
     public remove(tagOrTagIndex: string | number, ...others: (string | number)[]): string[] {
         var removed = this._remove(tagOrTagIndex, ...others);
         if (removed) {
-            this._setModified("remove",removed.splice(0,1),removed);
+            this._setModified("remove", removed.splice(0, 1), removed);
             //this.addToUndo(new UndoItem(this, this.remove, this._add, removed));
         }
         return removed;
@@ -179,28 +179,28 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
         return reso;
     }
 
-    
+
 
     public add(tag: Tags | string | string[], ...tags: (Tags | string | string[])[]): Tags {
         if (tag instanceof Tags) {
             tag = tag._tags;
         }
         var added = this._add(tag, ...tags);
-        if(added.length>0){
-            if(this._initialized){
-                this._setModified("add",added);
+        if (added.length > 0) {
+            if (this._initialized) {
+                this._setModified("add", added);
             }
         }
         return this;
     }
-    public copy(mute:boolean=this.muted) {
-        var cpy = mute? new Tags(mute,this.values().slice(0)):new Tags(this.values().slice(0));
+    public copy(mute: boolean = this.muted) {
+        var cpy = mute ? new Tags(mute, this.values().slice(0)) : new Tags(this.values().slice(0));
         return cpy;
     }
     public test(predicate: (arrPredicate: string[]) => boolean = (function (p) { return true; })): boolean {
         return predicate(this.values());
     }
-    public promptForTags(displayText = "tags", ...additionalDefaultTags: string[]): void {
+    public promptForTags(displayText:string = "tags", ...additionalDefaultTags: string[]): void {
         let paused = mpUtils.paused;
         mpUtils.pause(true);
         if (Array.isArray(displayText)) {
@@ -213,13 +213,18 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
             var valsAsStr = valsAsArr.join(",");
             var self = this;
             mp.input.get({
-                "prompt": displayText, "default_text": valsAsStr, "submit": function (userInput) {
+                prompt: displayText, 
+                default_text: valsAsStr, 
+                submit: function (userInput) {
                     if (self._tags.length != 0) {
                         self.clear();
                     }
                     self.add(userInput);
                     mp.input.terminate();
                     mpUtils.pause(paused);
+                },
+                edited:function(herf,merf){
+                    dump(arguments);
                 }
             });
         }

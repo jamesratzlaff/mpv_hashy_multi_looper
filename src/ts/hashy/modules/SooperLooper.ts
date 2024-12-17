@@ -14,6 +14,7 @@ export class SooperLooper extends BaseEventListener {
     private _clipFacade: Clips | undefined = undefined;
     private _clipIndex: number = -1;
     private _currentClip: Clip | undefined;
+    private _selectedClip?: Clip;
     private _lastFileLoaded: string | undefined;
     private _timeChangeHandler: (name: string, value: number | undefined) => void;
     private _onFileLoadHandler: () => boolean;
@@ -26,27 +27,28 @@ export class SooperLooper extends BaseEventListener {
     constructor() {
         super();
         this._loops_enabled = true;
-        
-        
-         
+
+
+
         var me = this;
-        
-        
+
+
         this._onFileLoadHandler = function (): boolean {
             return me.checkIfFileIsSame();
         }
-         mp.register_event("file-loaded", this._onFileLoadHandler);
-        
+        mp.register_event("file-loaded", this._onFileLoadHandler);
+
         this.prependHandler(function (evt) {
+            dump(evt);
             me._clipFacade = undefined;
         }, this);
         this._timeChangeHandler = //function (n: string, v: number | undefined): void {};
-        function (n: string, v: number | undefined): void {
-            if(me._lastFileLoaded!==undefined){
-                me._onTimeChangeHandler(n, v);
+            function (n: string, v: number | undefined): void {
+                if (me._lastFileLoaded !== undefined) {
+                    me._onTimeChangeHandler(n, v);
+                }
             }
-        }
-        
+
     }
 
 
@@ -73,15 +75,15 @@ export class SooperLooper extends BaseEventListener {
         return changed;
     }
 
-    
+
 
     get metaObj(): MetaObj {
-        
+
         if (this._metaobj === undefined) {
             this._metaobj = new MetaObj();
-            if(!this.muted){
+            if (!this.muted) {
                 this._metaobj.addObserver(this);
-            }   else {
+            } else {
                 this._metaobj.mute();
             }
             if (this._saveOnModify) {
@@ -132,12 +134,12 @@ export class SooperLooper extends BaseEventListener {
         if (paused) {
             print("video is paused, not checking for time change");
             return;
-        } 
+        }
         var val = value !== undefined ? value * 1000 : undefined;
         if (val !== undefined) {
             val = (val / this.durationMillis) * 100;
         }
-        
+
         if (this.clips.length > 0 && val !== undefined && val < 100) {
             var changeClip = false;
             if (val !== undefined) {
@@ -158,11 +160,17 @@ export class SooperLooper extends BaseEventListener {
                     if (this.currentClip === undefined) {
                         mp.commandv("playlist-next");
                     } else {
-                        mp.set_property_native("time-pos", this.getTimePos(this.currentClip.start));//(this.currentClip.start / 100) * (parseFloat(mp.get_property("duration", "1"))) + "");
+                       this.seekToClip(this.currentClip);//(this.currentClip.start / 100) * (parseFloat(mp.get_property("duration", "1"))) + "");
                     }
-                    
+
                 }
             }
+        }
+    }
+
+    private seekToClip(clip: Clip|undefined, start: boolean = true) {
+        if (clip !== undefined) {
+            mp.set_property_native("time-pos", this.getTimePos(start ? clip.start : clip.end));
         }
     }
 
@@ -277,7 +285,29 @@ export class SooperLooper extends BaseEventListener {
             }
         }
     }
-
+    get selectedClip(): Clip | undefined {
+        if (this._selectedClip === undefined) {
+            var foundClip = this.metaObj.getClipAtPos(mpUtils.percentPos);
+            if (foundClip !== null) {
+                this._selectedClip = foundClip;
+            }
+        }
+        return this._selectedClip;
+    }
+    set selectedClip(clip: Clip | number | undefined | null) {
+        var c = clip;
+        if (typeof c === "number") {
+            var locdClip: Clip | undefined | null = this.metaObj.getClipAtPos(c);
+            if (locdClip === null) {
+                locdClip = undefined;
+            }
+            c = locdClip;
+        }
+        if (c === null) {
+            c = undefined;
+        }
+        this._selectedClip = c;
+    }
     get enabled() {
         return this._enabled;
     }
@@ -291,6 +321,8 @@ export class SooperLooper extends BaseEventListener {
         mp.osd_message(`loops ${this._getEnabledOrDisabled(this.loops_enabled)}`);
     }
 
+
+
     addClipStart(): Clip {
         var clip = undefined;
 
@@ -298,12 +330,60 @@ export class SooperLooper extends BaseEventListener {
         let end = this.metaObj.clips.getNextClipBoundary(start);
         clip = this.metaObj.clips.addClip(new Clip(start, end));
         clip.addObserver(this);
+        this.selectedClip = clip;
         this.editTags(clip);
-        mp.osd_message("added clip:\n "+clip.toFormattedString());
+        mp.osd_message("added clip:\n " + clip.toFormattedString());
         return clip;
     }
+    addClipEnd(): Clip {
+        var clip = undefined;
+        let start = mpUtils.percentPos;
+        let end = this.metaObj.clips.getPrevClipBoundary(start);
+        clip = this.metaObj.clips.addClip(new Clip(start, end));
+        clip.addObserver(this);
+        this.selectedClip = clip;
+        this.editTags(clip);
+        mp.osd_message("added clip:\n " + clip.toFormattedString());
+        return clip;
+    }
+    selectClipAtPos(): Clip | undefined {
+        this.selectedClip = this.metaObj.getClipAtPos(mpUtils.percentPos);
+        this._pauseAndShowOsdClipInfo(this.selectedClip, "selected clip: ");
+        return this.selectedClip;
+    }
 
-    editTags(clip?: Clip) {
+    nextLoop(): Clip | undefined {
+        let selectedClip = this.selectedClip;
+        this.selectedClip = this.metaObj.clips.getNext(selectedClip !== undefined ? selectedClip : mpUtils.percentPos);
+        this._pauseAndSeekToClipShowingOsdInfo(this.selectedClip, "Next Clip: ");
+        return this.selectedClip;
+    }
+
+    prevLoop(): Clip | undefined {
+        let selectedClip = this.selectedClip;
+        this.selectedClip = this.metaObj.clips.getPrev(selectedClip !== undefined ? selectedClip : mpUtils.percentPos);
+        this._pauseAndSeekToClipShowingOsdInfo(this.selectedClip, "Prev Clip: ");
+        this.seekToClip(this.selectedClip);
+        return this.selectedClip;
+    }
+    private _showOsdClipInfo(clip: Clip | undefined, prefix: string = ""){
+        if (clip !== undefined) {
+            mp.osd_message(prefix + clip.toFormattedString());
+        }
+    }
+    private _pauseAndShowOsdClipInfo(clip: Clip | undefined, prefix: string = ""): void {
+        if (clip !== undefined) {
+            mpUtils.pause(true);
+            this._showOsdClipInfo(clip,prefix);
+        }
+    }
+
+    private _pauseAndSeekToClipShowingOsdInfo(clip: Clip | undefined, prefix: string = ""){
+        this.seekToClip(clip);
+        this._pauseAndShowOsdClipInfo(clip, prefix);
+    }
+
+    editTags(clip: Clip | undefined = this.selectedClip) {
 
         if (clip === undefined) {
             var foundClip = this.metaObj.getClipAtPos(mpUtils.percentPos);

@@ -10,7 +10,7 @@ export class ChangeEvent implements IChangeEvent {
     readonly valuesOrArgs?: any[];
     constructor(eventNameOrSource: string | any | Function, source?: any | any, ...values: any[]) {
         var name: string | Function | undefined = undefined;
-        print("eventNameOrSource", eventNameOrSource, "source", source, "values", values);
+        // print("eventNameOrSource", eventNameOrSource, "source", source, "values", values);
         if (typeof eventNameOrSource !== "string") {
             // if (eventNameOrSource instanceof AbstractChangeNotifier) {
 
