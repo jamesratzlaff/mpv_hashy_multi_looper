@@ -1,10 +1,12 @@
-import { ConcreteChangeNotifier, ModificationChangeNotifier } from "./ChangeListener";
+import { mpUtils } from "./MpUtils";
 import { AbsUndoable, UndoItem } from "./Undoable";
-export class Tags extends ModificationChangeNotifier {//extends AbsUndoable {
+import { BaseEventListener, EventNotifier, HandlesEvent, HasNotifier } from "./EventListener";
+export class Tags extends BaseEventListener implements HasNotifier {//extends AbsUndoable {
     private _tags: string[] = [];
     private _initialized: boolean = false;
+    
     constructor(tags: boolean|string|Tags|string[] = [], ...more: (Tags | string | string[])[]) {
-        super(() => this);
+        super();
         if(typeof tags === "boolean"){
             if(tags){
                 this.mute();
@@ -15,6 +17,7 @@ export class Tags extends ModificationChangeNotifier {//extends AbsUndoable {
         
         this._initialized = true;
     }
+    
 
     get length(){
         return this.values.length;
@@ -28,11 +31,15 @@ export class Tags extends ModificationChangeNotifier {//extends AbsUndoable {
             var backUp = this.toJSON();
 
             this._clear();
-            this._setModified(this.remove,backUp.shift(),backUp);
+            this._setModified("remove",backUp.shift(),backUp);
             //this.addToUndo(new UndoItem(this, this.clear, this._add, backUp));
         }
     }
-
+    
+    _setModified(name:string,...args:any[]){
+        this.notifyWithThis(name,...args);
+    }
+   
     private _clear() {
         this._tags = [];
     }
@@ -141,6 +148,7 @@ export class Tags extends ModificationChangeNotifier {//extends AbsUndoable {
     public remove(tagOrTagIndex: string | number, ...others: (string | number)[]): string[] {
         var removed = this._remove(tagOrTagIndex, ...others);
         if (removed) {
+            this._setModified("remove",removed.splice(0,1),removed);
             //this.addToUndo(new UndoItem(this, this.remove, this._add, removed));
         }
         return removed;
@@ -180,12 +188,12 @@ export class Tags extends ModificationChangeNotifier {//extends AbsUndoable {
         var added = this._add(tag, ...tags);
         if(added.length>0){
             if(this._initialized){
-                this._setModified(this.add,added);
+                this._setModified("add",added);
             }
         }
         return this;
     }
-    public copy(mute:boolean=false) {
+    public copy(mute:boolean=this.muted) {
         var cpy = mute? new Tags(mute,this.values().slice(0)):new Tags(this.values().slice(0));
         return cpy;
     }
@@ -193,6 +201,8 @@ export class Tags extends ModificationChangeNotifier {//extends AbsUndoable {
         return predicate(this.values());
     }
     public promptForTags(displayText = "tags", ...additionalDefaultTags: string[]): void {
+        let paused = mpUtils.paused;
+        mpUtils.pause(true);
         if (Array.isArray(displayText)) {
             additionalDefaultTags = displayText;
             displayText = "tags";
@@ -209,6 +219,7 @@ export class Tags extends ModificationChangeNotifier {//extends AbsUndoable {
                     }
                     self.add(userInput);
                     mp.input.terminate();
+                    mpUtils.pause(paused);
                 }
             });
         }

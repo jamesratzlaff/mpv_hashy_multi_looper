@@ -1,4 +1,4 @@
-import { ConcreteChangeNotifier } from "./ChangeListener";
+import { BaseEventNotifier, EventListener,EventNotifier,HasNotifier } from "./EventListener";
 import { Comparable } from "./Sortables";
 
 export type ReturnsNumberFunction = () => number;
@@ -11,7 +11,7 @@ export interface HasStartAndEnd {
 
 
 
-export class NumberRange extends ConcreteChangeNotifier implements HasStartAndEnd, Comparable<NumberRange | HasStartAndEnd> {
+export class NumberRange extends BaseEventNotifier implements HasStartAndEnd, Comparable<NumberRange | HasStartAndEnd>, HasNotifier {
 	public static createRandomNumberRange() {
 		var val1 = Math.random() * 100;
 		var val2 = Math.random() * 100;
@@ -28,10 +28,11 @@ export class NumberRange extends ConcreteChangeNotifier implements HasStartAndEn
 		return arr;
 	}
 
-	private _modified = true;
+	
 
 	protected _start: number = Number.MIN_VALUE;
 	protected _end: number = Number.MAX_VALUE;
+	
 	constructor(start: any = 0, endVal: number|boolean = 100.0) {
 		super();
 		if(typeof endVal === "boolean"){
@@ -73,8 +74,9 @@ export class NumberRange extends ConcreteChangeNotifier implements HasStartAndEn
 		}
 		this.start = start;
 		this.end = end;
-		this._modified = modified;
+		
 	}
+	
 	//conditionally returns new instance
 	public withStart(value: number) {
 		if (value == undefined || value == null || isNaN(value)) {
@@ -151,10 +153,16 @@ export class NumberRange extends ConcreteChangeNotifier implements HasStartAndEn
 			} else {
 				this._start = value;
 			}
-			this.setModified("start", value);
+			this._setModified("start", value);
 		}
 
 	}
+
+	private _setModified(evtName:string,...args:any[]){
+		this.notifyWithThis(evtName,...args);
+	}
+
+	
 
 	get start() {
 		return this._start;
@@ -166,15 +174,7 @@ export class NumberRange extends ConcreteChangeNotifier implements HasStartAndEn
 		//}
 
 	}
-
-	get modified() {
-		return this._modified;
-	}
-
-	public setUnmodified() {
-		this._modified = false;
-	}
-
+	
 	set end(value) {
 		// print("set end => ", " value: ", value, " this._start: ", this._start, " this._end: ", this._end);
 		if (value != this.end) {
@@ -184,25 +184,16 @@ export class NumberRange extends ConcreteChangeNotifier implements HasStartAndEn
 			} else {
 				this._end = value;
 			}
-			this.setModified("end", value);
+			this._setModified("end", value);
 		}
 	}
-	private setModified(func?: any, ...args: any[]) {
-		this._modified = true;
-		var name = undefined;
-		if (typeof func === "function") {
-			name = func.name;
-		} else if (func !== undefined) {
-			name = (func).toString();
-		}
-		this.notifyObserversUsingEventNamed(name, ...args);
-	}
+	
 
 	/**
 	 * 
 	 * @returns @Range
 	 */
-	public copy(mute:boolean=false) {
+	public copy(mute:boolean=this.muted) {
 		let cpy=new NumberRange(this,mute);
 		return cpy;
 	}
@@ -221,7 +212,7 @@ export class NumberRange extends ConcreteChangeNotifier implements HasStartAndEn
 		if (amt != 0) {
 			this._start = this.start + amt;
 			this._end = this.end + amt;
-			this.setModified(this.offset, amt);
+			this._setModified("offset", amt);
 		}
 		return this;
 	}
@@ -237,7 +228,7 @@ export class NumberRange extends ConcreteChangeNotifier implements HasStartAndEn
 		if (scale != 0 && scale != 1) {
 			this._start = this.start * scale;
 			this._end = this.end * scale;
-			this.setModified(this.scale, scale);
+			this._setModified("scale", scale);
 		}
 		return this;
 	}

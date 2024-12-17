@@ -23,13 +23,10 @@ export function normalizedBoundsBinarySearch<T extends Comparable<T>>(toSearchFo
     upperBound = normalizeNumberToCollection(upperBound, inSortedCollection);
     return binarySearch(toSearchFor, inSortedCollection, lowerBound, upperBound);
 }
-function swapElements(inSortedCollection: any[], index1: number, index2: number) {
-    var element1 = inSortedCollection[index1];
-
-}
 
 
 
+/**
 
 function quickSort<T extends Comparable<T>>(arr: T[], start: number=0, end: number=arr.length): void {
     if (arr.length < 2) {
@@ -40,7 +37,6 @@ function quickSort<T extends Comparable<T>>(arr: T[], start: number=0, end: numb
     // dump("p1",p1);
     let p2 = p1;
     
-    /* skip elements identical to the pivot */
     while (++p2 <= end && ((arr[p2] == arr[p1]) || arr[p1].compareTo(arr[p2]) === 0))
         continue;
 
@@ -51,12 +47,11 @@ function quickSort<T extends Comparable<T>>(arr: T[], start: number=0, end: numb
     if (p2 < end) {
         quickSort(arr, p2, end);
     }
-}
-
+}*/
+/*
 function partition<T extends Comparable<T>>(arr: T[], start: number, end: number): number {
     
    // print("start",start,"end",end);
-    /* choose pivot at 3/4 or the array */
     let i = end - ((end - start + 1) >> 2);
    // print("i",i);
     let pivot = arr[i];
@@ -82,6 +77,7 @@ function partition<T extends Comparable<T>>(arr: T[], start: number, end: number
     return start;
 }
 
+*/
 
 /**
  * assumes lowerBound and upperBound are at minimum 0 and at most inSortedCollection.length and lowerBound is less than upperBound
@@ -199,7 +195,7 @@ export function binarySearchWithComparator(toSearchFor: any, inSortedCollection:
     return val;
 }
 
-
+/*
 class NumStats {
     readonly arrGetter: (() => number[]);
     constructor(getter: (() => number[]) = () => []) {
@@ -277,12 +273,12 @@ class NumStats {
         return { "count": this.count, "total": this.total, "avg": this.avg, "min": this.min, "max": this.max };
     }
 }
+*/
 
 
 
-
-
-export class AbsStopWatch {
+/*
+ class AbsStopWatch {
     static getCurrentTimeMillis(): number {
         return mp.get_time_ms();
     }
@@ -392,8 +388,9 @@ export class AbsStopWatch {
         return { "name": this.name, "stats": new NumStats(() => this.times.map(t => t.length)), "subwatches": this._subWatches };
     }
 }
-
-export class StopWatch {
+*/
+/*
+ class StopWatch {
     private _absWatch: AbsStopWatch;
     constructor(watch: AbsStopWatch = new AbsStopWatch()) {
         this._absWatch = watch;
@@ -434,7 +431,8 @@ export class StopWatch {
     }
 
 }
-
+    */
+/**
 export function doTest(numOfruns: number = 100, arrSize: number = 1000) {
     var sw = new StopWatch();
     sw.start();
@@ -452,3 +450,4 @@ export function doTest(numOfruns: number = 100, arrSize: number = 1000) {
     sw.asRoot().stop();
     dump(sw);
 }
+     */
