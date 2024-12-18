@@ -5,103 +5,161 @@ import { stringEndsWith, stringStartsWith } from "./StrUtils";
 import { mpUtils } from "./MpUtils";
 type sooperlooper_ = {};
 type _key = {};
-const SOOPER_LOOPER_IDEN_PREFIX_Type = <T>() => "";
-const SOOPER_LOOPER_KEY_SUFFIX_Type = <T extends _key>() => { };
-const SOOPER_LOOPER_IDEN_PREFIX_FUNC = () => `${SOOPER_LOOPER_IDEN_PREFIX_Type}`;
 const SOOPER_LOOPER_IDEN_PREFIX = "sooperlooper_";//SOOPER_LOOPER_IDEN_PREFIX_FUNC();
-const SOOPER_LOOPER_KEY_SUFFIX_FUNC = () => `${SOOPER_LOOPER_KEY_SUFFIX_Type}`;
 const SOOPER_LOOPER_KEY_SUFFIX = "_key";//SOOPER_LOOPER_KEY_SUFFIX_FUNC();
 type SooperLocalPropUnMod<Type> = Type extends `sooperlooper_${infer rest}` ? Type : never;
 
-type SooperLocalProp<Type> = Type extends SooperLocalPropUnMod<Type>? Type extends `sooperlooper_${infer rest}` ? rest : never:never;
-type SooperKeyUnMod<Type> = Type extends `${SooperLocalPropUnMod<Type>}`? `${SooperLocalProp<Type>}` extends `${infer rest}_key`? Type : never:never;
-export type SooperKey<Type> = `${SooperLocalProp<Type>}` extends `${infer derp}_key`? derp : never;
-export type nonLocalNonKey<Type> = Exclude<Type,SooperKeyUnMod<Type>|SooperLocalPropUnMod<Type>>;
-export type SooperNonKeyLocalProp<Type> = SooperLocalProp<Exclude<SooperLocalPropUnMod<Type>,SooperKeyUnMod<Type>>>;
-type SooperKeyReturnsClip<Type> = `${SooperKey<Type>}` extends `${infer derp}Clip${infer herp}`? `${derp}` extends (`add`|`select`|`prev`|`next`)?`${SooperKey<Type>}`: never:never;
-type sooperlooper_derp_key = SooperKey<string>;
+type SooperLocalProp<Type> = Type extends `sooperlooper_${infer rest}` ? rest : never;
+type SooperKeyUnMod<Type> = Type extends `${SooperLocalPropUnMod<Type>}` ? `${SooperLocalProp<Type>}` extends `${infer rest}_key` ? Type : never : never;
 
-function merp(de: sooperlooper_derp_key) { };
-// export type ISooperLooperOptions = Record<string, string | number | boolean> & {
-//     defaultTags: "",
-//     saveOnModify: false,
-//     sooperlooper_enabled: true,
-//     sooperlooper_defaultTagFilter: "",
-//     sooperlooper_save_key: string,
-//     sooperlooper_toggleSooperLooper_key: string,
-//     sooperlooper_toggleLoops_key: string,
-//     sooperlooper_setSelectedClipStart_key: string,
-//     sooperlooper_setSelectedClipEnd_key: string,
-//     sooperlooper_addClipStart_key: string,
-//     sooperlooper_addClipEnd_key: string,
-//     sooperlooper_nextLoop_key: string,
-//     sooperlooper_prevLoop_key: string,
-//     sooperlooper_toggleLoopEnabled_key: string,
-//     sooperlooper_editTags_key: string,
-//     sooperlooper_editDefaultTags_key: string,
-//     sooperlooper_selectedClipGoToStart_key: string,
-//     sooperlooper_selectedClipGoToEnd_key: string,
-//     sooperlooper_stepClipFrameBackward_key: string,
-//     sooperlooper_stepClipFrameForward_key: string,
-//     sooperlooper_selectClipAtPos_key: string,
+export type SooperKey<Type> = `${SooperLocalProp<Type>}` extends `${infer derp}_key` ? derp : never;
+export type nonLocalNonKey<Type> = Exclude<Exclude<Type, SooperKeyUnMod<Type>>, SooperLocalPropUnMod<Type>>;
+export type SooperNonKeyLocalProp<Type> = SooperLocalProp<Exclude<SooperLocalPropUnMod<Type>, SooperKeyUnMod<Type>>>;
+
+type SooperKeyReturnsClip<Type> = `${SooperKey<Type>}` extends `${infer derp}Clip${infer herp}` ? `${derp}` extends (`add` | `select` | `prev` | `next`) ? `${SooperKey<Type>}` : never : never;
+type SooperKeyAddReturnsClips<Type> = `${SooperKeyReturnsClip<Type>}` extends `add${infer rest}` ? `${SooperKeyReturnsClip<Type>}` : never;
+type SooperRestOfReturnsClips<Type> = Exclude<SooperKeyReturnsClip<Type>, SooperKeyAddReturnsClips<Type>>;
+type SooperKeyVoidTypes<Type> = Exclude<SooperKey<Type>, nonLocalNonKey<Type | SooperKeyReturnsClip<Type> | SooperLocalProp<Type> | SooperNonKeyLocalProp<Type> | SooperKeyUnMod<Type>>>;
 
 
-// };
-// type SooperLooperBaseKey<T> = T extends `${SOOPER_LOOPER_IDEN_PREFIX}`
-// function getDefaultValue<Type,Property<keyof Type>(t:Type,p:Property){
-//     if(t[property]){
 
-//     }
-// }
-// type PropEventSource<Type> = {
-//     toString<Key extends string & keyof Type>
-//         (eventName: `${Key}Changed`, callback: (newValue: Type[Key]) => void): void;
-// };
-// declare function makeSooperLooper<Type>(obj: Type): Type & PropEventSource<Type>;
-// type PropEventSource<Type> = {
-//     on(eventName: `${string & keyof Type}Changed`, callback: (newValue: any) => void): void;
-// };
-type ExtractRecord<Type> = {
-    [Property in keyof Type  as  `${SooperKeyReturnsClip<string & Property>}`]: Type[Property] extends string ? "" : Type[Property] extends boolean ? false : Type[Property] extends number ? 0 : Type[Property];
-};
-type Merf = ExtractRecord<ISooperLooperOptions>;
-function doof(f: Merf) {
 
+type SooperKeyVoidFuncs = {
+
+    [Property in keyof ISooperLooperOptions  as  `${SooperKeyVoidTypes<string & Property>}`]: () => void;
 
 }
-type ISooperLooperOptions = {
-    defaultTags: "",
-    saveOnModify: false,
-    sooperlooper_enabled: true,
-    sooperlooper_defaultTagFilter: "",
-    sooperlooper_save_key: "",
-    sooperlooper_toggleSooperLooper_key: "",
-    sooperlooper_toggleLoops_key: "",
-    sooperlooper_setSelectedClipStart_key: "",
-    sooperlooper_setSelectedClipEnd_key: "",
-    sooperlooper_addClipStart_key: "",
-    sooperlooper_addClipEnd_key: "",
-    sooperlooper_nextClip_key: "",
-    sooperlooper_prevClip_key: "",
-    sooperlooper_toggleLoopEnabled_key: "",
-    sooperlooper_editTags_key: "",
-    sooperlooper_editDefaultTags_key: "",
-    sooperlooper_editTagFilter: "",
-    sooperlooper_toggleTagFilter: "",
-    sooperlooper_selectedClipGoToStart_key: "",
-    sooperlooper_selectedClipGoToEnd_key: "",
-    sooperlooper_stepClipFrameBackward_key: "",
-    sooperlooper_stepClipFrameForward_key: "",
-    sooperlooper_selectClipAtPos_key: ""
+type SooperRestOfReturnsClipsFuncs = {
+    [Property in keyof ISooperLooperOptions  as  `${SooperRestOfReturnsClips<string & Property>}`]: () => Clip | undefined;
+}
+type SooperKeyAddReturnsClipsFuncs = {
+    [Property in keyof ISooperLooperOptions  as  `${SooperKeyAddReturnsClips<string & Property>}`]: () => Clip;
+}
 
-};
 
-export const SooperLooperOptions = ISooperLooperOptions;
+
+export type ISooperLooperIFaceType = (SooperRestOfReturnsClipsFuncs & SooperKeyAddReturnsClipsFuncs & SooperKeyVoidFuncs);
+
+
+// type SooperKeyFunction<Type,Retn> = {
+// 
+// [Property in keyof Type as Property ]: () => Retn;
+// };
+// 
+// type ExtractRecord<Type,RetType> = {
+//     [Property in keyof Type  as  `${SooperRestOfReturnsClips<string & Property>}`]: RetType//SooperKeyFunction<Type[Property],Clip|undefined>
+// };
+// type Merf = {
+// ExtractRecord<ISooperLooperOptions,Cl>;
+// }
+// type Derf = SooperKeyFunction<Merf,Clip|undefined>;
+// 
+// 
+// }
+
+
+export interface ISooperLooperOptions  extends Record<string,string|boolean|number>{
+    defaultTags: string,
+    saveOnModify: boolean,
+    sooperlooper_enabled: boolean,
+    defaultTagFilter: string,
+    sooperlooper_save_key: string,
+    sooperlooper_toggleSooperLooper_key: string,
+    sooperlooper_toggleLoops_key: string,
+    sooperlooper_setSelectedClipStart_key: string,
+    sooperlooper_setSelectedClipEnd_key: string,
+    sooperlooper_addClipStart_key: string,
+    sooperlooper_addClipEnd_key: string,
+    sooperlooper_nextClip_key: string,
+    sooperlooper_prevClip_key: string,
+    sooperlooper_toggleLoopEnabled_key: string,
+    sooperlooper_editTags_key: string,
+    sooperlooper_editDefaultTags_key: string,
+    sooperlooper_editTagFilter_key: string,
+    sooperlooper_toggleTagFilter_key: string,
+    sooperlooper_selectedClipGoToStart_key: string,
+    sooperlooper_selectedClipGoToEnd_key: string,
+    sooperlooper_stepClipFrameBackward_key: string,
+    sooperlooper_stepClipFrameForward_key: string,
+    sooperlooper_selectClipAtPos_key: string
+}
+export class SooperLooperOptionClass implements ISooperLooperOptions{
+    defaultTags= "";
+    saveOnModify= false;
+    sooperlooper_enabled= true;
+    defaultTagFilter= "";
+    sooperlooper_save_key= "";
+    sooperlooper_toggleSooperLooper_key= "";
+    sooperlooper_toggleLoops_key= "";
+    sooperlooper_setSelectedClipStart_key= "";
+    sooperlooper_setSelectedClipEnd_key= "";
+    sooperlooper_addClipStart_key= "";
+    sooperlooper_addClipEnd_key= "";
+    sooperlooper_nextClip_key= "";
+    sooperlooper_prevClip_key= "";
+    sooperlooper_toggleLoopEnabled_key= "";
+    sooperlooper_editTags_key= "";
+    sooperlooper_editDefaultTags_key= "";
+    sooperlooper_editTagFilter_key= "";
+    sooperlooper_toggleTagFilter_key= "";
+    sooperlooper_selectedClipGoToStart_key= "";
+    sooperlooper_selectedClipGoToEnd_key= "";
+    sooperlooper_stepClipFrameBackward_key= "";
+    sooperlooper_stepClipFrameForward_key= "";
+    sooperlooper_selectClipAtPos_key= "";
+    constructor(){
+        
+    }
+    [x: string]: string | number | boolean;
+    
+}
+export function getSooperLooperOptions():ISooperLooperOptions{
+    let inst= new SooperLooperOptionClass();
+    mp.options.read_options(inst);
+    return inst;
+}
+// const SooperLooperOptions:SooperLooperOptionClass =(function(){
+//     let inst= new SooperLooperOptionClass();
+//     mp.options.read_options(inst);
+//     return inst;
+// })();
+// defaultTags: "",
+// saveOnModify: false,
+// sooperlooper_enabled: true,
+// defaultTagFilter: "",
+// sooperlooper_save_key: "",
+// sooperlooper_toggleSooperLooper_key: "",
+// sooperlooper_toggleLoops_key: "",
+// sooperlooper_setSelectedClipStart_key: "",
+// sooperlooper_setSelectedClipEnd_key: "",
+// sooperlooper_addClipStart_key: "",
+// sooperlooper_addClipEnd_key: "",
+// sooperlooper_nextClip_key: "",
+// sooperlooper_prevClip_key: "",
+// sooperlooper_toggleLoopEnabled_key: "",
+// sooperlooper_editTags_key: "",
+// sooperlooper_editDefaultTags_key: "",
+// sooperlooper_editTagFilter_key: "",
+// sooperlooper_toggleTagFilter_key: "",
+// sooperlooper_selectedClipGoToStart_key: "",
+// sooperlooper_selectedClipGoToEnd_key: "",
+// sooperlooper_stepClipFrameBackward_key: "",
+// sooperlooper_stepClipFrameForward_key: "",
+// sooperlooper_selectClipAtPos_key: ""
+// };
+
+// type ISooperLooperOptionsMapper = ISooperLooperOptions{
+//     [key: string]: boolean | string | number;
+// }
+
+
+
+
 
 export interface ISooperLooperController {
     readonly sooperLooper: SooperLooper;
     get defaultTags(): Tags;
-    set defaultTags(Tags);
+    set defaultTags(tags: Tags);
     get saveOnModify(): boolean;
     set saveOnModify(val: boolean);
     get sooperlooperEnabled(): boolean;
@@ -125,8 +183,6 @@ export interface ISooperLooperController {
     stepClipFrameBackward(): void;
     stepClipFrameForward(): void;
 
-
-
 }
 function _extractNameFromIdentifier(identifier: string, prefix = SOOPER_LOOPER_IDEN_PREFIX, suffix = SOOPER_LOOPER_KEY_SUFFIX): string {
     let prefixIdx = identifier.indexOf(prefix);
@@ -135,6 +191,7 @@ function _extractNameFromIdentifier(identifier: string, prefix = SOOPER_LOOPER_I
         start = prefix.length;
     }
     let end = identifier.length;
+
     let suffixIdx = identifier.indexOf(suffix);
     if (suffixIdx > -1) {
         end = suffixIdx;
@@ -142,14 +199,17 @@ function _extractNameFromIdentifier(identifier: string, prefix = SOOPER_LOOPER_I
     let name = identifier.substring(start, end);
     return name;
 }
-class SooperLooperController implements ISooperLooperController {
+
+export class SooperLooperController implements ISooperLooperController {
     readonly sooperLooper: SooperLooper;
     private _defaultTags = new Tags();
     private _enabled = true;
     private _selectedClip?: Clip;
-    constructor(sl: SooperLooper = SOOPER_LOOPER, options: ISooperLooperOptions) {
+    private _configOptions:ISooperLooperOptions;
+    constructor(sl: SooperLooper = SOOPER_LOOPER, options: ISooperLooperOptions=getSooperLooperOptions()) {
         this.sooperLooper = sl;
-        this.applyConfig(options);
+        this._configOptions=options;
+        this.applyConfig(this.configOptions);
     }
     get sooperlooperEnabled(): boolean {
         return this.enabled;
@@ -174,14 +234,22 @@ class SooperLooperController implements ISooperLooperController {
     }
     private seekToClip(clip: Clip | undefined, start: boolean = true) {
         if (clip !== undefined) {
-            mp.set_property_native("time-pos", this.getTimePos(start ? clip.start : clip.end));
+            mpUtils.setTimePosFromPercentOfDurationMillis(start?clip.start:clip.end);//.set_property_native("time-pos", this.getTimePos(start ? clip.start : clip.end));
         }
     }
 
     get defaultTags(): Tags {
         return this._defaultTags;
     }
-
+    private get configOptions():ISooperLooperOptions{
+        if(this.configOptions===undefined){
+            this.configOptions=getSooperLooperOptions();
+        }
+        return this._configOptions;
+    }
+    private set configOptions(options:ISooperLooperOptions){
+        this._configOptions=options;
+    }   
     editDefaultTags() {
         this.defaultTags.promptForTags("default tags?");
     }
@@ -237,16 +305,14 @@ class SooperLooperController implements ISooperLooperController {
             }
         }
     }
-    applyConfig(config?: ISooperLooperOptions) {
-        if (config === undefined) {
-            config = SooperLooperOptions;
-        }
+    applyConfig(config: ISooperLooperOptions=getSooperLooperOptions()) {
+        
         for (let name in config) {
             if (stringEndsWith(name, SOOPER_LOOPER_KEY_SUFFIX)) {
                 this.bindKey(name, (config[name]).toString());
             }
         }
-        this.enabled = config.sooperlooperEnabled;
+        this.enabled = config.sooperlooper_enabled;
         this.saveOnModify = config.saveOnModify;
         this._defaultTags.add(config.defaultTags);
     }
@@ -257,9 +323,9 @@ class SooperLooperController implements ISooperLooperController {
         this._enabled = enabled;
         if (!this.enabled) {
             this.sooperLooper.loops_enabled = false;
-            for (let name in SooperLooperOptions) {
+            for (let name in this.configOptions) {
                 if (stringEndsWith(name, SOOPER_LOOPER_KEY_SUFFIX)) {
-                    let binding = SooperLooperOptions[name];
+                    let binding = this.configOptions[name];
                     binding = (binding).toString().trim();
                     if (binding.length != 0) {
                         if ("sooperlooper_toggleSooperLooper_key" !== name) {
@@ -408,6 +474,8 @@ class SooperLooperController implements ISooperLooperController {
         return template;
     }
 
-
+    toJSON(){
+       return this.configOptions; 
+    }
 
 }

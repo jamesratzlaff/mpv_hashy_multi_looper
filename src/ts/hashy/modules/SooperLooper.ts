@@ -1,7 +1,7 @@
 import { MetaObj } from "./MetaObj";
 import { Clips, Clip } from "./ClipObj";
 import { stringEndsWith, stringStartsWith } from "./StrUtils";
-import { ISooperLooperOptions, SooperLooperOptions } from "./SuperLooperOptions";
+import { ISooperLooperController, SooperLooperController, ISooperLooperOptions } from "./SuperLooperOptions";
 import { Tags } from "./Tags";
 import { mpUtils } from "./MpUtils";
 import { BaseEventListener } from "./EventListener";
@@ -18,6 +18,7 @@ export class SooperLooper extends BaseEventListener {
     private _observingTimeChange: boolean = false;
     private _defaultTags = new Tags();
     private _saveOnModify = false;
+    private _controller?:ISooperLooperController;
 
 
     constructor() {
@@ -26,9 +27,7 @@ export class SooperLooper extends BaseEventListener {
 
 
 
-        var me = this;
-
-
+        let me=this;
         this._onFileLoadHandler = function (): boolean {
             return me.checkIfFileIsSame();
         }
@@ -46,7 +45,12 @@ export class SooperLooper extends BaseEventListener {
             }
 
     }
-
+    get controller(){
+        if(this._controller===undefined){
+            this._controller=new SooperLooperController(this);
+        }
+        return this._controller;
+    }
     set loops_enabled(val) {
         this._loops_enabled = val;
 
@@ -184,7 +188,8 @@ export class SooperLooper extends BaseEventListener {
                     if (this.currentClip === undefined) {
                         mp.commandv("playlist-next");
                     } else {
-                       this.seekToClip(this.currentClip);//(this.currentClip.start / 100) * (parseFloat(mp.get_property("duration", "1"))) + "");
+                        
+                       mpUtils.setTimePosFromPercentOfDurationMillis(this.currentClip.start);//(this.currentClip.start / 100) * (parseFloat(mp.get_property("duration", "1"))) + "");
                     }
 
                 }
@@ -198,7 +203,6 @@ export class SooperLooper extends BaseEventListener {
 }
 
 export const SOOPER_LOOPER = new SooperLooper();
-SOOPER_LOOPER.applyConfig();
 
 function doKeyBinding(opts: Record<string, string | boolean | number>) {
     for (let name in opts) {
@@ -208,20 +212,20 @@ function doKeyBinding(opts: Record<string, string | boolean | number>) {
     }
 }
 
-export function bindKeys() {
-    mp.options.read_options(SooperLooperOptions);
-    dump(SooperLooperOptions);
-    doKeyBinding(SooperLooperOptions);
-    /*
-    save_key=s
-    toggleSooperLooper_key=L
-    toggleLoops_key=l
-    setCurrentClipStart_key=[
-    setCurrentClipEnd_key=]
-    addClipStart_key={
-    addClipEnd_key=}
-    nextLoop_key=>
-    prevLoop_key=<
-    toggleLoopEnabled_key=e
-    */
-}
+// export function bindKeys() {
+//     mp.options.read_options(SooperLooperOptions);
+//     dump(SooperLooperOptions);
+//     doKeyBinding(SooperLooperOptions);
+//     /*
+//     save_key=s
+//     toggleSooperLooper_key=L
+//     toggleLoops_key=l
+//     setCurrentClipStart_key=[
+//     setCurrentClipEnd_key=]
+//     addClipStart_key={
+//     addClipEnd_key=}
+//     nextLoop_key=>
+//     prevLoop_key=<
+//     toggleLoopEnabled_key=e
+//     */
+// }
