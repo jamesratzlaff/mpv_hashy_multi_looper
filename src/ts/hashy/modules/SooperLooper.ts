@@ -1,25 +1,21 @@
 import { MetaObj } from "./MetaObj";
 import { Clips, Clip } from "./ClipObj";
 import { stringEndsWith, stringStartsWith } from "./StrUtils";
-import { SooperLooperOptions, ISooperLooperOptions } from "./SuperLooperOptions";
+import { ISooperLooperOptions, SooperLooperOptions } from "./SuperLooperOptions";
 import { Tags } from "./Tags";
 import { mpUtils } from "./MpUtils";
 import { BaseEventListener } from "./EventListener";
 
-const SOOPER_LOOPER_IDEN_PREFIX = "sooperlooper_";
-const SOOPER_LOOPER_KEY_SUFFIX = "_key";
+
 export class SooperLooper extends BaseEventListener {
     private _metaobj: MetaObj | undefined;
     private _loops_enabled: boolean;
     private _clipFacade: Clips | undefined = undefined;
-    private _clipIndex: number = -1;
     private _currentClip: Clip | undefined;
-    private _selectedClip?: Clip;
     private _lastFileLoaded: string | undefined;
     private _timeChangeHandler: (name: string, value: number | undefined) => void;
     private _onFileLoadHandler: () => boolean;
     private _observingTimeChange: boolean = false;
-    private _enabled: boolean = true;
     private _defaultTags = new Tags();
     private _saveOnModify = false;
 
@@ -51,10 +47,38 @@ export class SooperLooper extends BaseEventListener {
 
     }
 
+    set loops_enabled(val) {
+        this._loops_enabled = val;
+
+        if (this._loops_enabled && this._lastFileLoaded !== undefined) {
+            if (!this._observingTimeChange) {
+                this._observingTimeChange = true;
+                mp.observe_property("time-pos/full", "number", this._timeChangeHandler);//function(n,v){
+            }
+        } else {
+            if (this._observingTimeChange) {
+                this._observingTimeChange = false;
+                mp.unobserve_property(this._timeChangeHandler);
+            }
+        }
+
+    }
 
 
     get loops_enabled() {
         return this._loops_enabled;
+    }
+
+    get defaultTags(){
+        return this._defaultTags;
+    }
+
+    set defaultTags(tag:(Tags | string | string[]|undefined)){
+        if(tag===undefined){
+            tag=[];
+        }
+        this._defaultTags.set(tag);
+
     }
 
     checkIfFileIsSame(): boolean {
@@ -127,7 +151,7 @@ export class SooperLooper extends BaseEventListener {
     }
 
     private _onTimeChangeHandler(name: string, value: number | undefined): void {
-        if (!this.enabled) {
+        if (!this.loops_enabled) {
             return;
         }
         let paused = mp.get_property_bool("pause", false);
@@ -168,242 +192,7 @@ export class SooperLooper extends BaseEventListener {
         }
     }
 
-    private seekToClip(clip: Clip|undefined, start: boolean = true) {
-        if (clip !== undefined) {
-            mp.set_property_native("time-pos", this.getTimePos(start ? clip.start : clip.end));
-        }
-    }
-
-    get defaultTags(): Tags {
-        return this._defaultTags;
-    }
-
-    editDefaultTags() {
-        this.defaultTags.promptForTags("default tags?", ...this.defaultTags.values());
-    }
-
-
-
-    getTimePos(val: number) {
-        return this.getTimePosMillis(val) / 1000;
-    }
-    getTimePosMillis(val: number): number {
-        return (val / 100) * this.metaObj.duration;
-    }
-
-    set loops_enabled(val) {
-        this._loops_enabled = val;
-
-        if (this._loops_enabled && this._lastFileLoaded !== undefined) {
-            if (!this._observingTimeChange) {
-                this._observingTimeChange = true;
-                mp.observe_property("time-pos/full", "number", this._timeChangeHandler);//function(n,v){
-            }
-        } else {
-            if (this._observingTimeChange) {
-                this._observingTimeChange = false;
-                mp.unobserve_property(this._timeChangeHandler);
-            }
-        }
-
-    }
-    private static _extractNameFromIdentifier(identifier: string, prefix = SOOPER_LOOPER_IDEN_PREFIX, suffix = SOOPER_LOOPER_KEY_SUFFIX): string {
-        let prefixIdx = identifier.indexOf(prefix);
-        let start = 0;
-        if (prefixIdx === 0) {
-            start = prefix.length;
-        }
-        let end = identifier.length;
-        let suffixIdx = identifier.indexOf(suffix);
-        if (suffixIdx > -1) {
-            end = suffixIdx;
-        }
-        let name = identifier.substring(start, end);
-        return name;
-    }
-    bindKey(identifier: string | undefined, key: string = "", callback?: (() => void) | string) {
-
-        if (identifier !== undefined) {
-            if (key === null) {
-                key = "";
-            }
-            key = key.trim();
-            var self = this;
-            if (key.length === 0) {
-                mp.remove_key_binding(identifier);
-            } else {
-                if (callback === undefined) {
-                    callback = SooperLooper._extractNameFromIdentifier(identifier);
-                }
-                if (typeof callback === "string") {
-                    let msg = callback;
-                    let obj: any = self;
-                    let cb: any = obj[msg];
-                    if (typeof cb === "function") {
-                        callback = function () { cb.apply(self); };
-                    } else {
-                        callback = function () {
-                            mp.osd_message("no function found for " + msg);
-                        };
-                    }
-                }
-                print("binding key", identifier, key);
-                if (typeof callback === "function") {
-                    mp.add_key_binding(key, identifier, callback);
-                }
-
-            }
-        }
-    }
-    applyConfig(config?: ISooperLooperOptions) {
-        if (config === undefined) {
-            config = SooperLooperOptions;
-        }
-        for (let name in config) {
-            if (stringEndsWith(name, SOOPER_LOOPER_KEY_SUFFIX)) {
-                this.bindKey(name, (config[name]).toString());
-            }
-        }
-        this.enabled = config.sooperlooperEnabled;
-        this.saveOnModify = config.saveOnModify;
-        this._defaultTags.add(config.defaultTags);
-    }
-    set enabled(enabled) {
-        this._enabled = enabled;
-        if (!this.enabled) {
-            this.loops_enabled = false;
-            for (let name in SooperLooperOptions) {
-                if (stringEndsWith(name, SOOPER_LOOPER_KEY_SUFFIX)) {
-                    let binding = SooperLooperOptions[name];
-                    binding = (binding).toString().trim();
-                    if (binding.length != 0) {
-                        if ("sooperlooper_toggleSooperLooper_key" !== name) {
-                            this.bindKey(name, "");
-                        }
-                    }
-                }
-            }
-        }
-    }
-    get selectedClip(): Clip | undefined {
-        if (this._selectedClip === undefined) {
-            var foundClip = this.metaObj.getClipAtPos(mpUtils.percentPos);
-            if (foundClip !== null) {
-                this._selectedClip = foundClip;
-            }
-        }
-        return this._selectedClip;
-    }
-    set selectedClip(clip: Clip | number | undefined | null) {
-        var c = clip;
-        if (typeof c === "number") {
-            var locdClip: Clip | undefined | null = this.metaObj.getClipAtPos(c);
-            if (locdClip === null) {
-                locdClip = undefined;
-            }
-            c = locdClip;
-        }
-        if (c === null) {
-            c = undefined;
-        }
-        this._selectedClip = c;
-    }
-    get enabled() {
-        return this._enabled;
-    }
-
-    toggleSooperLooper() {
-        this.enabled = !this.enabled;
-        mp.osd_message(`sooper looper ${this._getEnabledOrDisabled(this.enabled)}`);
-    }
-    toggleLoops() {
-        this.loops_enabled = !this.loops_enabled;
-        mp.osd_message(`loops ${this._getEnabledOrDisabled(this.loops_enabled)}`);
-    }
-
-
-
-    addClipStart(): Clip {
-        var clip = undefined;
-
-        let start = mpUtils.percentPos;
-        let end = this.metaObj.clips.getNextClipBoundary(start);
-        clip = this.metaObj.clips.addClip(new Clip(start, end));
-        clip.addObserver(this);
-        this.selectedClip = clip;
-        this.editTags(clip);
-        mp.osd_message("added clip:\n " + clip.toFormattedString());
-        return clip;
-    }
-    addClipEnd(): Clip {
-        var clip = undefined;
-        let start = mpUtils.percentPos;
-        let end = this.metaObj.clips.getPrevClipBoundary(start);
-        clip = this.metaObj.clips.addClip(new Clip(start, end));
-        clip.addObserver(this);
-        this.selectedClip = clip;
-        this.editTags(clip);
-        mp.osd_message("added clip:\n " + clip.toFormattedString());
-        return clip;
-    }
-    selectClipAtPos(): Clip | undefined {
-        this.selectedClip = this.metaObj.getClipAtPos(mpUtils.percentPos);
-        this._pauseAndShowOsdClipInfo(this.selectedClip, "selected clip: ");
-        return this.selectedClip;
-    }
-
-    nextLoop(): Clip | undefined {
-        let selectedClip = this.selectedClip;
-        this.selectedClip = this.metaObj.clips.getNext(selectedClip !== undefined ? selectedClip : mpUtils.percentPos);
-        this._pauseAndSeekToClipShowingOsdInfo(this.selectedClip, "Next Clip: ");
-        return this.selectedClip;
-    }
-
-    prevLoop(): Clip | undefined {
-        let selectedClip = this.selectedClip;
-        this.selectedClip = this.metaObj.clips.getPrev(selectedClip !== undefined ? selectedClip : mpUtils.percentPos);
-        this._pauseAndSeekToClipShowingOsdInfo(this.selectedClip, "Prev Clip: ");
-        this.seekToClip(this.selectedClip);
-        return this.selectedClip;
-    }
-    private _showOsdClipInfo(clip: Clip | undefined, prefix: string = ""){
-        if (clip !== undefined) {
-            mp.osd_message(prefix + clip.toFormattedString());
-        }
-    }
-    private _pauseAndShowOsdClipInfo(clip: Clip | undefined, prefix: string = ""): void {
-        if (clip !== undefined) {
-            mpUtils.pause(true);
-            this._showOsdClipInfo(clip,prefix);
-        }
-    }
-
-    private _pauseAndSeekToClipShowingOsdInfo(clip: Clip | undefined, prefix: string = ""){
-        this.seekToClip(clip);
-        this._pauseAndShowOsdClipInfo(clip, prefix);
-    }
-
-    editTags(clip: Clip | undefined = this.selectedClip) {
-
-        if (clip === undefined) {
-            var foundClip = this.metaObj.getClipAtPos(mpUtils.percentPos);
-            if (foundClip !== null) {
-                clip = foundClip;
-            }
-        }
-        if (clip === undefined) {
-            this.metaObj.description_tags.promptForTags("file description tags?");
-        } else {
-            clip.tags.promptForTags("tags?", ...this.defaultTags.values());
-        }
-    }
-
-    private _getEnabledOrDisabled(enabled: boolean): string {
-        let enDis = enabled ? "en" : "dis";
-        let template = `${enDis}abled`;
-        return template;
-    }
-
+    
 
 
 }

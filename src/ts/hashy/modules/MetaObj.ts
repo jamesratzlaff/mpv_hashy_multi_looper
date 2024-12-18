@@ -179,14 +179,17 @@ export class MetaObj extends BaseEventListener{
         }
     }
 
-    public save(): MetaObj {
+    public save(displayOutput:(msg:string)=>void=()=>{}): MetaObj {
         this.initialize();
         var hash = this.hash;
         if (hash) {
             var path = this.metaObjFilePath;
             if (path !== null) {
+                displayOutput(`saving loops to ${this.metaObjFilePath}`);
                 writeFile(path, this);
+                displayOutput("save complete");
                 this._jsonMtime = lastModifiedTimeMillis(path);
+                this.modified=false;
             }
         }
         return this;

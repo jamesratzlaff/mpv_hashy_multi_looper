@@ -102,11 +102,15 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
     }
 
     public getNext(clip: Clip | number | undefined) {
-        return this.getPreviousOrNext(clip,true);
+        var nxt= this.getPreviousOrNext(clip,true);
+        dump("getNext",clip,nxt);
+        return nxt;
 
     }
     public getPrev(clip: Clip | number | undefined){
-        return this.getPreviousOrNext(clip,false);
+        var prev = this.getPreviousOrNext(clip,false);
+        dump("getPrev",clip,prev);
+        return prev;
     }
 
     private getPreviousOrNext(clip: Clip | number | undefined, forward: boolean):Clip|undefined {
@@ -122,10 +126,14 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
             var clipLoc = binarySearchWithComparator(clip, this.clips, Clip.COMPARE);
             if(clipLoc>-1){
                 if(clipLoc===0&&!forward){
-                    return undefined;
+                    if(this.length>0){
+                        return this.clips[this.length-1];
+                    }
                 }
                 if(clipLoc===this.length-1&&forward){
-                    return undefined;
+                    if(this.length>0){
+                        return this.clips[0];
+                    }
                 }
                 return this.clips[clipLoc+dir];
             }
