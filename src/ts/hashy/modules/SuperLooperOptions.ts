@@ -1,6 +1,6 @@
 import { Clip } from "./ClipObj";
 import { SOOPER_LOOPER, SooperLooper } from "./SooperLooper";
-import { Tags } from "./Tags";
+import { processValuesString, Tags } from "./Tags";
 import { stringEndsWith, stringStartsWith } from "./StrUtils";
 import { mpUtils } from "./MpUtils";
 import { BaseEventListener } from "./EventListener";
@@ -60,7 +60,7 @@ export type ISooperLooperIFaceType = (SooperRestOfReturnsClipsFuncs & SooperKeyA
 // }
 
 
-export interface ISooperLooperOptions  extends Record<string,string|boolean|number>{
+export interface ISooperLooperOptions extends Record<string, string | boolean | number> {
     defaultTags: string,
     saveOnModify: boolean,
     sooperlooper_enabled: boolean,
@@ -85,39 +85,39 @@ export interface ISooperLooperOptions  extends Record<string,string|boolean|numb
     sooperlooper_stepClipFrameForward_key: string,
     sooperlooper_selectClipAtPos_key: string
 }
-export class SooperLooperOptionClass implements ISooperLooperOptions{
-    defaultTags= "";
-    saveOnModify= false;
-    sooperlooper_enabled= true;
-    defaultTagFilter= "";
-    sooperlooper_save_key= "";
-    sooperlooper_toggleSooperLooper_key= "";
-    sooperlooper_toggleLoops_key= "";
-    sooperlooper_setSelectedClipStart_key= "";
-    sooperlooper_setSelectedClipEnd_key= "";
-    sooperlooper_addClipStart_key= "";
-    sooperlooper_addClipEnd_key= "";
-    sooperlooper_nextClip_key= "";
-    sooperlooper_prevClip_key= "";
-    sooperlooper_toggleLoopEnabled_key= "";
-    sooperlooper_editTags_key= "";
-    sooperlooper_editDefaultTags_key= "";
-    sooperlooper_editTagFilter_key= "";
-    sooperlooper_toggleTagFilter_key= "";
-    sooperlooper_selectedClipGoToStart_key= "";
-    sooperlooper_selectedClipGoToEnd_key= "";
-    sooperlooper_stepClipFrameBackward_key= "";
-    sooperlooper_stepClipFrameForward_key= "";
-    sooperlooper_selectClipAtPos_key= "";
-    constructor(){
-        
+export class SooperLooperOptionClass implements ISooperLooperOptions {
+    defaultTags = "";
+    saveOnModify = false;
+    sooperlooper_enabled = true;
+    defaultTagFilter = "";
+    sooperlooper_save_key = "";
+    sooperlooper_toggleSooperLooper_key = "";
+    sooperlooper_toggleLoops_key = "";
+    sooperlooper_setSelectedClipStart_key = "";
+    sooperlooper_setSelectedClipEnd_key = "";
+    sooperlooper_addClipStart_key = "";
+    sooperlooper_addClipEnd_key = "";
+    sooperlooper_nextClip_key = "";
+    sooperlooper_prevClip_key = "";
+    sooperlooper_toggleLoopEnabled_key = "";
+    sooperlooper_editTags_key = "";
+    sooperlooper_editDefaultTags_key = "";
+    sooperlooper_editTagFilter_key = "";
+    sooperlooper_toggleTagFilter_key = "";
+    sooperlooper_selectedClipGoToStart_key = "";
+    sooperlooper_selectedClipGoToEnd_key = "";
+    sooperlooper_stepClipFrameBackward_key = "";
+    sooperlooper_stepClipFrameForward_key = "";
+    sooperlooper_selectClipAtPos_key = "";
+    constructor() {
+
     }
     [x: string]: string | number | boolean;
-    
+
 }
-export function getSooperLooperOptions():ISooperLooperOptions{
-    let inst= new SooperLooperOptionClass();
-    print("getSooperLooperOptions","reading in sooperlooper options")
+export function getSooperLooperOptions(): ISooperLooperOptions {
+    let inst = new SooperLooperOptionClass();
+    print("getSooperLooperOptions", "reading in sooperlooper options")
     mp.options.read_options(inst);
     dump("getSooperLooperOptions", inst);
     return inst;
@@ -182,6 +182,7 @@ export interface ISooperLooperController {
     toggleLoopEnabled(): void;
     editTags(): void;
     editDefaultTags(): void;
+    editTagFilter(): void;
     selectedClipGoToStart(): void;
     selectedClipGoToEnd(): void;
     stepClipFrameBackward(): void;
@@ -209,26 +210,63 @@ export class SooperLooperController extends BaseEventListener implements ISooper
     private _defaultTags = new Tags();
     private _enabled = true;
     private _selectedClip?: Clip;
-    private _configOptions:ISooperLooperOptions;
-    constructor(sl: SooperLooper, options: ISooperLooperOptions=getSooperLooperOptions()) {
+    private _configOptions: ISooperLooperOptions;
+    private _tagFilter: string = "";
+    constructor(sl: SooperLooper, options: ISooperLooperOptions = getSooperLooperOptions()) {
         super();
         print("creating sooperlooper controller");
         this.sooperLooper = sl;
         this.sooperLooper.addListener(this);
         print("applying options");
-        this._configOptions=options;
-        dump("config options",this.configOptions);
+        this._configOptions = options;
+        dump("config options", this.configOptions);
         print("applying config");
         this.applyConfig(this.configOptions);
         print("done creating sooplooper controller");
-        var self=this;
-        this.prependHandler(function(evt){
-            if(evt.eventOrFunctionName==="fileChanged"){
+        var self = this;
+
+        this.prependHandler(function (evt) {
+            if (evt.eventOrFunctionName === "fileChanged") {
                 print("file changed...undefining selected clip");
-                self._selectedClip=undefined;
+                self._selectedClip = undefined;
             }
-        },this);
+        }, this);
     }
+    editTagFilter(): void {
+        if (mp.input !== undefined && mp.input.get !== undefined) {
+            var self = this;
+            mp.input.get({
+                prompt: "tag filter",
+                default_text: this.tagFilter,
+                submit: function (userInput) {
+                    self.tagFilter = userInput;
+                    mp.input.terminate();
+                }
+            });
+        }
+
+    }
+    get tagFilter(): string {
+        if (this._tagFilter === undefined) {
+            this.tagFilter = "";
+        }
+        return this._tagFilter;
+    }
+    set tagFilter(filter: string) {
+        if (filter === null || filter === undefined) {
+            filter = "";
+        }
+        if (this._tagFilter !== filter) {
+            this._tagFilter = filter;
+            var asPredicate = SooperLooperController._convertTagFilterToPredicate(this._tagFilter);
+            this.sooperLooper.tagFilter = asPredicate;
+            this.notifyWithThis("tagFilter", filter);
+        }
+    }
+    private static _convertTagFilterToPredicate(filter: string): ((tags: Tags) => boolean) {
+        return (tags: Tags) => true;
+    }
+
     get sooperlooperEnabled(): boolean {
         return this.enabled;
     }
@@ -236,67 +274,67 @@ export class SooperLooperController extends BaseEventListener implements ISooper
         this.enabled = enabled;
     }
     setSelectedClipStart(): void {
-        if(this._selectedClip===undefined){
+        if (this._selectedClip === undefined) {
             this.addClipStart();
         } else {
-            this._selectedClip.start=mpUtils.percentPos;
+            this._selectedClip.start = mpUtils.percentPos;
         }
     }
     setSelectedClipEnd(): void {
-        if(this._selectedClip===undefined){
+        if (this._selectedClip === undefined) {
             this.addClipEnd();
         } else {
-            this._selectedClip.end=mpUtils.percentPos;
+            this._selectedClip.end = mpUtils.percentPos;
         }
     }
     toggleLoopEnabled(): void {
         throw new Error("Method not implemented.");
     }
-    stepClipFrameBackward(obj?:any): void {
-        if(obj!==undefined){
-            if(obj.event!=="up"){
+    stepClipFrameBackward(obj?: any): void {
+        if (obj !== undefined) {
+            if (obj.event !== "up") {
                 mpUtils.frameBackStep();
             } else {
-                dump("stepClipFrameBackward","obj",obj);
+                dump("stepClipFrameBackward", "obj", obj);
             }
         }
-        
+
     }
-    stepClipFrameForward(obj?:any): void {
-        if(obj!==undefined){
-            if(obj.event!=="up"){
+    stepClipFrameForward(obj?: any): void {
+        if (obj !== undefined) {
+            if (obj.event !== "up") {
                 mpUtils.frameStep();
             } else {
-                if(this._selectedClip!==undefined){
-                    
+                if (this._selectedClip !== undefined) {
+
                 }
-                dump("stepClipFrameForward","obj",obj);
+                dump("stepClipFrameForward", "obj", obj);
             }
         }
-        
+
     }
     private seekToClip(clip: Clip | undefined, start: boolean = true) {
         if (clip !== undefined) {
-            mpUtils.setTimePosFromPercentOfDurationMillis(start?clip.start:clip.end);//.set_property_native("time-pos", this.getTimePos(start ? clip.start : clip.end));
+            mpUtils.setTimePosFromPercentOfDurationMillis(start ? clip.start : clip.end);//.set_property_native("time-pos", this.getTimePos(start ? clip.start : clip.end));
         }
     }
 
     get defaultTags(): Tags {
         return this._defaultTags;
     }
-    private get configOptions():ISooperLooperOptions{
-        if(this._configOptions===undefined){
-            this.configOptions=getSooperLooperOptions();
+    private get configOptions(): ISooperLooperOptions {
+        if (this._configOptions === undefined) {
+            this.configOptions = getSooperLooperOptions();
         }
         return this._configOptions;
     }
-    private set configOptions(options:ISooperLooperOptions){
-        this._configOptions=options;
-    }   
+    private set configOptions(options: ISooperLooperOptions) {
+        this._configOptions = options;
+    }
     editDefaultTags() {
         this.defaultTags.promptForTags("default tags?");
     }
-    
+
 
 
     getTimePos(val: number) {
@@ -411,7 +449,7 @@ export class SooperLooperController extends BaseEventListener implements ISooper
     selectedClipGoToEnd() {
         var selectedClip = this.selectedClip;
         if (selectedClip !== undefined) {
-            this.seekToClip(this.selectedClip,false);
+            this.seekToClip(this.selectedClip, false);
         }
     }
     selectedClipGoToStart() {
@@ -468,8 +506,8 @@ export class SooperLooperController extends BaseEventListener implements ISooper
     }
 
     bindKey(identifier: string | undefined, key: string = "", callback?: (() => void) | string) {
-        let flags=undefined;
-        
+        let flags = undefined;
+
         if (identifier !== undefined) {
             if (key === null) {
                 key = "";
@@ -477,11 +515,11 @@ export class SooperLooperController extends BaseEventListener implements ISooper
             key = key.trim();
             let splitUp = key.split(/[\s]+/);
             // dump("bindKey","splitUp",splitUp);
-            key=splitUp[0];
-            if(splitUp.length>1){
+            key = splitUp[0];
+            if (splitUp.length > 1) {
                 let joined = splitUp.slice(1).join(" ");
                 //dump("bindKey","joined",joined);
-                flags=JSON.parse(joined);
+                flags = JSON.parse(joined);
             }
             var self = this;
             if (key.length === 0) {
@@ -495,12 +533,12 @@ export class SooperLooperController extends BaseEventListener implements ISooper
                     let obj: any = self;
                     let cb: any = obj[msg];
                     if (typeof cb === "function") {
-                        if(flags!==undefined){
-                            if(flags["complex"]!==undefined&&flags["complex"]===true){
-                                callback = function () { cb.apply(self,arguments); };
+                        if (flags !== undefined) {
+                            if (flags["complex"] !== undefined && flags["complex"] === true) {
+                                callback = function () { cb.apply(self, arguments); };
                             }
                         } else {
-                            callback = function () {cb.apply(self); };
+                            callback = function () { cb.apply(self); };
                         }
                     } else {
                         callback = function () {
@@ -510,10 +548,10 @@ export class SooperLooperController extends BaseEventListener implements ISooper
                 }
                 print("binding key", identifier, key);
                 if (typeof callback === "function") {
-                    if(flags===undefined){
+                    if (flags === undefined) {
                         mp.add_key_binding(key, identifier, callback);
                     } else {
-                        mp.add_key_binding(key, identifier, callback,flags);
+                        mp.add_key_binding(key, identifier, callback, flags);
                     }
                 }
 
@@ -531,8 +569,9 @@ export class SooperLooperController extends BaseEventListener implements ISooper
         this.enabled = config.sooperlooper_enabled;
         this.saveOnModify = config.saveOnModify;
         this._defaultTags.add(config.defaultTags);
+        this.tagFilter = config.defaultTagFilter;
     }
-    
+
 
     private _getEnabledOrDisabled(enabled: boolean): string {
         let enDis = enabled ? "en" : "dis";
@@ -540,8 +579,8 @@ export class SooperLooperController extends BaseEventListener implements ISooper
         return template;
     }
 
-    toJSON(){
-       return this.configOptions; 
+    toJSON() {
+        return this.configOptions;
     }
 
 }
