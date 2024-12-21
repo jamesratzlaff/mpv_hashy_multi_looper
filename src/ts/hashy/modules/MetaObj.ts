@@ -29,10 +29,10 @@ export class MetaObj extends BaseEventListener{
         this._jsonMtime = -1;
         this._modified = false;
         var me = this;
-        // this.prependHandler(function (evt) { 
-        //     dump(evt); 
-        //     me.modified=true;
-        // });
+        this.prependHandler(function (evt) { 
+            dump(evt); 
+            me.modified=true;
+        });
 
     }
     private get initialized(): boolean {

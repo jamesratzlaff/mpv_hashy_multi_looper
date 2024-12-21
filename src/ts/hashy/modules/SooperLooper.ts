@@ -19,7 +19,8 @@ export class SooperLooper extends BaseEventListener {
     private _defaultTags = new Tags();
     private _saveOnModify = false;
     private _controller?:ISooperLooperController;
-
+    private _firstFile?:string;
+    private _filePlayed?:boolean;
 
     constructor() {
         super();
@@ -88,7 +89,17 @@ export class SooperLooper extends BaseEventListener {
     checkIfFileIsSame(): boolean {
         let fp = mp.get_property("path", undefined);
         let changed = false;
+        let inContinuousLoop=false;
         if (fp !== this._lastFileLoaded) {
+            if(this._firstFile===undefined){
+                this._firstFile=fp;
+            } else {
+                if(!this._filePlayed){
+                    if(fp===this._firstFile){
+                        inContinuousLoop=true;
+                    }
+                }
+            }
             this._metaobj = undefined;
             changed = true;
             this._currentClip = undefined;
@@ -102,7 +113,12 @@ export class SooperLooper extends BaseEventListener {
             this.loops_enabled = this._loops_enabled;
         }
         if(changed){
+            //this should clear any selected clip vars in the controller object
             this.notifyWithThis("fileChanged",fp);
+        }
+        if(inContinuousLoop){
+            mp.osd_message("no loops to play...pausing");
+            mpUtils.pause(true);
         }
         return changed;
     }
@@ -170,8 +186,12 @@ export class SooperLooper extends BaseEventListener {
             return;
         }
         
-        let paused = mp.get_property_bool("pause", false);
+        let paused = mpUtils.paused;
         if (paused) {
+            var seeking = mp.get_property_bool("seek",false);
+            if(seeking){
+                print("video is seeking");
+            }
             print("video is paused, not checking for time change");
             return;
         }
@@ -182,6 +202,9 @@ export class SooperLooper extends BaseEventListener {
 
         if (this.clips.length > 0 && val !== undefined && val < 100) {
             var changeClip = false;
+            if(!this._filePlayed){
+                this._filePlayed=true;
+            }
             if (val !== undefined) {
                 var isValidPos = false;
                 if (this.currentClip !== undefined) {
@@ -206,6 +229,8 @@ export class SooperLooper extends BaseEventListener {
 
                 }
             }
+        } else if(val!==undefined && val>=100){
+            mp.commandv("playlist-next");
         }
     }
 

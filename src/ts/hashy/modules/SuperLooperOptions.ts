@@ -222,12 +222,12 @@ export class SooperLooperController extends BaseEventListener implements ISooper
         this.applyConfig(this.configOptions);
         print("done creating sooplooper controller");
         var self=this;
-        // this.prependHandler(function(evt){
-        //     if(evt.eventOrFunctionName==="fileChanged"){
-        //         print("file changed...undefining selected clip");
-        //         self._selectedClip=undefined;
-        //     }
-        // },this);
+        this.prependHandler(function(evt){
+            if(evt.eventOrFunctionName==="fileChanged"){
+                print("file changed...undefining selected clip");
+                self._selectedClip=undefined;
+            }
+        },this);
     }
     get sooperlooperEnabled(): boolean {
         return this.enabled;
@@ -296,13 +296,7 @@ export class SooperLooperController extends BaseEventListener implements ISooper
     editDefaultTags() {
         this.defaultTags.promptForTags("default tags?");
     }
-    // onEvent(evt: IChangeEvent): void {
-    //     if(evt.eventOrFunctionName==="fileChanged"){
-    //         print("file changed...undefining selected clip");
-    //         this._selectedClip=undefined;
-    //     }
-    //     super.onEvent(evt);
-    // }
+    
 
 
     getTimePos(val: number) {
