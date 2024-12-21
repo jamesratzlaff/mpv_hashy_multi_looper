@@ -37,9 +37,10 @@ export class SooperLooper extends BaseEventListener {
         mp.register_event("file-loaded", this._onFileLoadHandler);
 
         this.prependHandler(function (evt) {
-            dump(evt);
             me._clipFacade = undefined;
             me._filteredClips = undefined;
+            // me._currentClip = undefined;
+            // me._metaobj = undefined;
         }, this);
         this._timeChangeHandler = //function (n: string, v: number | undefined): void {};
             function (n: string, v: number | undefined): void {
@@ -107,7 +108,7 @@ export class SooperLooper extends BaseEventListener {
             changed = true;
             this._currentClip = undefined;
             this._clipFacade = undefined;
-
+            this._filteredClips = undefined;
         }
         print("checking if last file loaded is same ", "current file", this._lastFileLoaded, "fp", fp, "changed", changed);
         var doEnableCheck = this._lastFileLoaded === undefined;
@@ -192,6 +193,7 @@ export class SooperLooper extends BaseEventListener {
             filter = DEFAULT_TAG_FILTER;
         }
         this._filteredClips = undefined;
+        this.currentClip = undefined;
         this._tagFilter = filter;
     }
     private _getTagFilterAsClipFilter(): (clip: Clip) => boolean {
@@ -232,13 +234,17 @@ export class SooperLooper extends BaseEventListener {
             print("video is paused, not checking for time change");
             return;
         }
+
+
         var val = value !== undefined ? value * 1000 : undefined;
         if (val !== undefined) {
             val = (val / this.durationMillis) * 100;
         }
+
         var clips = this.filteredClips;
-        
+
         if (clips.length > 0 && val !== undefined && val < 100) {
+
             var changeClip = false;
             if (!this._filePlayed) {
                 this._filePlayed = true;
@@ -247,27 +253,28 @@ export class SooperLooper extends BaseEventListener {
                 var isValidPos = false;
                 if (this.currentClip !== undefined) {
                     if (!this.currentClip.contains(val)) {
-                        this.currentClip = SooperLooper.getClipThatContains(clips,val);
-                        dump("currentClip", this.currentClip);
-                    } 
-                    isValidPos = this.currentClip!==undefined;;
-                    
+                        this.currentClip = undefined;
+                    }
                 }
+                if (this.currentClip === undefined) {
+                    this.currentClip = SooperLooper.getClipThatContains(clips, val);
+                }
+
+                isValidPos = this.currentClip !== undefined;
                 if (!isValidPos) {
                     if (this.currentClip === undefined) {
-                        var nxtClip = clips.getNextClosestClip(val);
-                        // dump("value", val, "nxtClip", nxtClip, "clips", this.clips);
-                        this.currentClip = nxtClip;
+                        if (clips.length > 0) {
+                            if (clips.clips[clips.length - 1].end > val) {
+                                var nxtClip = clips.getNextClosestClip(val);
+                                this.currentClip = nxtClip;
+                            }
+                        }
                     }
                     if (this.currentClip === undefined) {
                         mp.commandv("playlist-next");
                     } else {
-
                         mpUtils.setTimePosFromPercentOfDurationMillis(this.currentClip.start);//(this.currentClip.start / 100) * (parseFloat(mp.get_property("duration", "1"))) + "");
                     }
-
-                } else {
-
                 }
             }
         } else if (val !== undefined && val >= 100) {
@@ -275,7 +282,7 @@ export class SooperLooper extends BaseEventListener {
         }
     }
 
-    static getClipThatContains(clips:Clips, val:number):Clip|undefined{
+    static getClipThatContains(clips: Clips, val: number): Clip | undefined {
         return clips.getInnerMostClipAtPosFast(val);
     }
 

@@ -264,6 +264,19 @@ export class SooperLooperController extends BaseEventListener implements ISooper
         }
     }
     private static _convertTagFilterToPredicate(filter: string): ((tags: Tags) => boolean) {
+        let parts = processValuesString(filter);
+        if (parts.length > 0) {
+            var result = (tags: Tags) => {
+                var truth = true;
+                for (var i = 0; truth && i < parts.length; i++) {
+                    let part=parts[i];
+                    truth=tags.values().indexOf(part)!==-1;
+                    print("part",part,"values",tags.values().join(","),"index",tags.values().indexOf(part));
+                }
+                return truth;
+            }
+            return result;
+        }
         return (tags: Tags) => true;
     }
 

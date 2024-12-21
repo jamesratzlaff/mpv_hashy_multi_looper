@@ -12,7 +12,16 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
             if (tags) {
                 this.mute();
             }
-        } else if (tags) {
+
+        }
+        if (tags === undefined || typeof tags === "boolean") {
+            var tgs = more.shift();
+            if (tgs !== undefined) {
+                tags = tgs;
+            }
+            
+        } 
+        if(tags!==undefined&&typeof tags!=="boolean"){
             this.add(tags, ...more);
         }
 
@@ -26,7 +35,7 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
         this._alwaysPrompWithDefaultTags = alwaysPrompt;
     }
     get length() {
-        return this.values.length;
+        return this.values().length;
     }
     public values(): string[] {
         return this._tags;
@@ -44,7 +53,7 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
         this.notifyWithThis(name, ...args);
     }
 
-    
+
 
     /**
      * 

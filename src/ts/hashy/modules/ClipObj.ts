@@ -50,13 +50,14 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         }
         if (clips) {
             if (clips instanceof Clips) {
-                clips = clips.clips;
+                clips = clips.clips.slice(0);
             }
             // dump("Clips_ctor ", clips);
             for (var i = 0; i < clips.length; i++) {
                 var clipJson = clips[i];
                 var clip = undefined;
-                clip = new Clip(clipJson, this.muted);
+                clip =(clipJson instanceof Clip)?clipJson.copy(this.muted):new Clip(clipJson, this.muted);
+                dump("new Clips",clip);
                 if (!this.muted) {
                     clip.addObserver(this);
                 }
@@ -88,12 +89,16 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
     withTagsInherited(ogClips:Clips=this):Clips{
         this.clips.forEach((clip)=>{
             let allTags = clip.getAllTags(ogClips.clips);
+            dump("allTags",allTags);
             clip.tags.set(allTags);
         });
         return this;
     }
     copyOfInnerMostClips(withTagsInherited:boolean=true,muted:boolean=true):Clips{
-        let c=new Clips(this.getInnerMostClips(),muted);
+        dump("copyOfInnerMostClips","this._clips",this._clips);
+        let innerMostClips =this.getInnerMostClips(); 
+        dump("copyOfInnerMostClips","innerMostClips",innerMostClips);
+        let c=new Clips(innerMostClips,muted);
         if(withTagsInherited){
             c=c.withTagsInherited(this);
         }
@@ -738,6 +743,10 @@ export class Clip extends BaseEventListener implements HasNotifier {
                 }
                 this._range = start._range.copy(this.muted);
                 this._tags = start._tags.copy(this.muted);
+                dump("new Clip","this", this,"start",start);
+                if(this.start===50&&this.end===85&&this.tags.length===0){
+                    dump("wtf",new Error("wtf").stack);
+                }
                 this.enabled = start.enabled;
                 isCopy = true;
             }
@@ -845,6 +854,7 @@ export class Clip extends BaseEventListener implements HasNotifier {
             all.mute();
         }
         all.add(this.tags);
+        dump("this.tags",this.tags,"all",all);
         var parentClips = this.getClipsContainingMe(clips);
         parentClips.forEach(function (parentClip) {
             all.add(parentClip.tags);
@@ -895,6 +905,13 @@ export class Clip extends BaseEventListener implements HasNotifier {
     toJSON(): Object {
         var asObj = { "start": this.start, "end": this.end, "tags": this.tags, "enabled": this.enabled, "alias": this.alias };
         return asObj;
+    }
+
+    copy(muted:boolean=true){
+        if(this.tags.length>0){
+            print("copy");
+        }
+        return new Clip(this,muted);
     }
 
     toFormattedString(duration?: number): string {
