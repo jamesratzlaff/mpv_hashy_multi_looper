@@ -66,6 +66,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         }
 
         this.sort();
+        
         var me = this;
 
         // this.prependHandler(function (evt) {

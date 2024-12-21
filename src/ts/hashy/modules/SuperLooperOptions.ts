@@ -115,7 +115,9 @@ export class SooperLooperOptionClass implements ISooperLooperOptions{
 }
 export function getSooperLooperOptions():ISooperLooperOptions{
     let inst= new SooperLooperOptionClass();
+    print("getSooperLooperOptions","reading in sooperlooper options")
     mp.options.read_options(inst);
+    dump("getSooperLooperOptions", inst);
     return inst;
 }
 // const SooperLooperOptions:SooperLooperOptionClass =(function(){
@@ -167,8 +169,8 @@ export interface ISooperLooperController {
     applyConfig(options?: ISooperLooperOptions): void;
     addClipStart(): Clip;
     addClipEnd(): Clip;
-    nextLoop(): Clip | undefined;
-    prevLoop(): Clip | undefined;
+    nextClip(): Clip | undefined;
+    prevClip(): Clip | undefined;
     selectClipAtPos(): Clip | undefined;
     save(): void;
     toggleSooperLooper(): void;
@@ -206,10 +208,15 @@ export class SooperLooperController implements ISooperLooperController {
     private _enabled = true;
     private _selectedClip?: Clip;
     private _configOptions:ISooperLooperOptions;
-    constructor(sl: SooperLooper = SOOPER_LOOPER, options: ISooperLooperOptions=getSooperLooperOptions()) {
+    constructor(sl: SooperLooper, options: ISooperLooperOptions=getSooperLooperOptions()) {
+        print("creating sooperlooper controller");
         this.sooperLooper = sl;
+        print("applying options");
         this._configOptions=options;
+        dump("config options",this.configOptions);
+        print("applying config");
         this.applyConfig(this.configOptions);
+        print("done creating sooplooper controller");
     }
     get sooperlooperEnabled(): boolean {
         return this.enabled;
@@ -218,19 +225,44 @@ export class SooperLooperController implements ISooperLooperController {
         this.enabled = enabled;
     }
     setSelectedClipStart(): void {
-        throw new Error("Method not implemented.");
+        if(this._selectedClip===undefined){
+            this.addClipStart();
+        } else {
+            this._selectedClip.start=mpUtils.percentPos;
+        }
     }
     setSelectedClipEnd(): void {
-        throw new Error("Method not implemented.");
+        if(this._selectedClip===undefined){
+            this.addClipEnd();
+        } else {
+            this._selectedClip.end=mpUtils.percentPos;
+        }
     }
     toggleLoopEnabled(): void {
         throw new Error("Method not implemented.");
     }
-    stepClipFrameBackward(): void {
-        throw new Error("Method not implemented.");
+    stepClipFrameBackward(obj?:any): void {
+        if(obj!==undefined){
+            if(obj.event!=="up"){
+                mpUtils.frameBackStep();
+            } else {
+                dump("stepClipFrameBackward","obj",obj);
+            }
+        }
+        
     }
-    stepClipFrameForward(): void {
-        throw new Error("Method not implemented.");
+    stepClipFrameForward(obj?:any): void {
+        if(obj!==undefined){
+            if(obj.event!=="up"){
+                mpUtils.frameStep();
+            } else {
+                if(this._selectedClip!==undefined){
+                    
+                }
+                dump("stepClipFrameForward","obj",obj);
+            }
+        }
+        
     }
     private seekToClip(clip: Clip | undefined, start: boolean = true) {
         if (clip !== undefined) {
@@ -242,7 +274,7 @@ export class SooperLooperController implements ISooperLooperController {
         return this._defaultTags;
     }
     private get configOptions():ISooperLooperOptions{
-        if(this.configOptions===undefined){
+        if(this._configOptions===undefined){
             this.configOptions=getSooperLooperOptions();
         }
         return this._configOptions;
@@ -269,53 +301,6 @@ export class SooperLooperController implements ISooperLooperController {
 
     }
 
-
-
-    bindKey(identifier: string | undefined, key: string = "", callback?: (() => void) | string) {
-
-        if (identifier !== undefined) {
-            if (key === null) {
-                key = "";
-            }
-            key = key.trim();
-            var self = this;
-            if (key.length === 0) {
-                mp.remove_key_binding(identifier);
-            } else {
-                if (callback === undefined) {
-                    callback = _extractNameFromIdentifier(identifier);
-                }
-                if (typeof callback === "string") {
-                    let msg = callback;
-                    let obj: any = self;
-                    let cb: any = obj[msg];
-                    if (typeof cb === "function") {
-                        callback = function () { cb.apply(self); };
-                    } else {
-                        callback = function () {
-                            mp.osd_message("no function found for " + msg);
-                        };
-                    }
-                }
-                print("binding key", identifier, key);
-                if (typeof callback === "function") {
-                    mp.add_key_binding(key, identifier, callback);
-                }
-
-            }
-        }
-    }
-    applyConfig(config: ISooperLooperOptions=getSooperLooperOptions()) {
-        
-        for (let name in config) {
-            if (stringEndsWith(name, SOOPER_LOOPER_KEY_SUFFIX)) {
-                this.bindKey(name, (config[name]).toString());
-            }
-        }
-        this.enabled = config.sooperlooper_enabled;
-        this.saveOnModify = config.saveOnModify;
-        this._defaultTags.add(config.defaultTags);
-    }
     set saveOnModify(som: boolean) {
         this.sooperLooper.saveOnModify = som;
     }
@@ -406,7 +391,7 @@ export class SooperLooperController implements ISooperLooperController {
         return this.selectedClip;
     }
 
-    nextLoop(): Clip | undefined {
+    nextClip(): Clip | undefined {
         let selectedClip = this.selectedClip;
         this.selectedClip = this.metaObj.clips.getNext(selectedClip !== undefined ? selectedClip : mpUtils.percentPos);
         this._pauseAndSeekToClipShowingOsdInfo(this.selectedClip, "Next Clip: ");
@@ -415,11 +400,14 @@ export class SooperLooperController implements ISooperLooperController {
     selectedClipGoToEnd() {
         var selectedClip = this.selectedClip;
         if (selectedClip !== undefined) {
-
+            this.seekToClip(this.selectedClip,false);
         }
     }
     selectedClipGoToStart() {
         var selectedClip = this.selectedClip;
+        if (selectedClip !== undefined) {
+            this.seekToClip(this.selectedClip);
+        }
     }
     save(): void {
         if (!this.saveOnModify) {
@@ -429,7 +417,7 @@ export class SooperLooperController implements ISooperLooperController {
         }
     }
 
-    prevLoop(): Clip | undefined {
+    prevClip(): Clip | undefined {
         let selectedClip = this.selectedClip;
         this.selectedClip = this.metaObj.clips.getPrev(selectedClip !== undefined ? selectedClip : mpUtils.percentPos);
         this._pauseAndSeekToClipShowingOsdInfo(this.selectedClip, "Prev Clip: ");
@@ -467,6 +455,73 @@ export class SooperLooperController implements ISooperLooperController {
             clip.tags.promptForTags("tags?", ...this.defaultTags.values());
         }
     }
+
+    bindKey(identifier: string | undefined, key: string = "", callback?: (() => void) | string) {
+        let flags=undefined;
+        
+        if (identifier !== undefined) {
+            if (key === null) {
+                key = "";
+            }
+            key = key.trim();
+            let splitUp = key.split(/[\s]+/);
+            // dump("bindKey","splitUp",splitUp);
+            key=splitUp[0];
+            if(splitUp.length>1){
+                let joined = splitUp.slice(1).join(" ");
+                //dump("bindKey","joined",joined);
+                flags=JSON.parse(joined);
+            }
+            var self = this;
+            if (key.length === 0) {
+                mp.remove_key_binding(identifier);
+            } else {
+                if (callback === undefined) {
+                    callback = _extractNameFromIdentifier(identifier);
+                }
+                if (typeof callback === "string") {
+                    let msg = callback;
+                    let obj: any = self;
+                    let cb: any = obj[msg];
+                    if (typeof cb === "function") {
+                        if(flags!==undefined){
+                            if(flags["complex"]!==undefined&&flags["complex"]===true){
+                                callback = function () { cb.apply(self,arguments); };
+                            }
+                        } else {
+                            callback = function () {cb.apply(self); };
+                        }
+                    } else {
+                        callback = function () {
+                            mp.osd_message("no function found for " + msg);
+                        };
+                    }
+                }
+                print("binding key", identifier, key);
+                if (typeof callback === "function") {
+                    if(flags===undefined){
+                        mp.add_key_binding(key, identifier, callback);
+                    } else {
+                        mp.add_key_binding(key, identifier, callback,flags);
+                    }
+                }
+
+            }
+        }
+    }
+    applyConfig(config: ISooperLooperOptions) {
+        print("applyConfig", "applying config");
+        for (let name in config) {
+            print("name", name);
+            if (stringEndsWith(name, SOOPER_LOOPER_KEY_SUFFIX)) {
+                this.bindKey(name, (config[name]).toString());
+            }
+        }
+        this.enabled = config.sooperlooper_enabled;
+        this.saveOnModify = config.saveOnModify;
+        this._defaultTags.add(config.defaultTags);
+    }
+    
 
     private _getEnabledOrDisabled(enabled: boolean): string {
         let enDis = enabled ? "en" : "dis";

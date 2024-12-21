@@ -5,6 +5,8 @@ const TIME_POS="time-pos";
 const TIME_POS_FULL=TIME_POS+"/full";
 const DURATION="duration";
 const DURATION_FULL=DURATION+"/full";
+const FRAME_STEP = "frame-step";
+const FRAME_BACK_STEP = "frame-back-step";
 
 class MpUtils {
     constructor(){}
@@ -16,6 +18,12 @@ class MpUtils {
     }
     pause(pause=!this.paused){
         this.paused=pause;
+    }
+    frameStep(){
+        mp.command_native([FRAME_STEP]);
+    }
+    frameBackStep(){
+        mp.command_native([FRAME_BACK_STEP]);
     }
     get duration():number {
         return mp.get_property_number(DURATION,NaN);

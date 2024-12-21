@@ -4,6 +4,7 @@
 // var Tags = require("./modules/Tags");
 //var mpUtils = require("./modules/MpUtils");
  var sl = require("./modules/SooperLooper");
+const { getSooperLooperOptions, SooperLooperController } = require("./modules/SuperLooperOptions");
 // var CL = require("./modules/ClipObj");
 // var derps = require("./modules/TestListener");
 // const { StopWatch,doTest } = require("./modules/Sortables");
@@ -98,11 +99,14 @@ function doTheThing(evt){
 // 	*/
 }
 try{
+	print("hello");
+	var sl = sl.SOOPER_LOOPER;
 	
-	 var sooperLooper = sl.SOOPER_LOOPER;
-	 sooperLooper.loops_enabled=true;
+	 var sooperLooperController = new SooperLooperController(sl);
+	// sooperLooperController.applyConfig();
+	// dump("sooperLooperController",sooperLooperController);
 }catch(e){
-	mp.msg.error(e.stack);
+	mp.msg.error("error",e);
 }
 // print("script name",mp.get_script_name());
 // sl.bindKeys();
