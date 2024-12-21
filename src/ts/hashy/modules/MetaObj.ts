@@ -47,6 +47,10 @@ export class MetaObj extends BaseEventListener{
 
         }
     }
+    get hasClips():boolean{
+        this.initialize();
+        return this._clips!==undefined&&this._clips.length>0;
+    }
     private _loadOrCreateJsonIfNecessary(): void {
         if (this._mTimeIsExpired) {
             this._loadOrCreateJson();
@@ -54,8 +58,11 @@ export class MetaObj extends BaseEventListener{
     }
     private _loadOrCreateJson(): this {
         var metaFilePath = this.metaObjFilePath;
+        print("_loadOrCreateJson","metaFilePath",metaFilePath);
+        dump(new Error("test").stack);
+        print("_loadOrCreateJson","this.toJSON",this.toJSON());
         if (metaFilePath !== null) {
-            var json = JSON.parse(openOrCreateIfNotExists(metaFilePath, this));
+            var json = JSON.parse(openOrCreateIfNotExists(metaFilePath, JSON.stringify(this.toJSON())));
             this._jsonMtime = lastModifiedTimeMillis(metaFilePath);
             this.setFromJSON(json);
         }
@@ -305,7 +312,7 @@ export class MetaObj extends BaseEventListener{
     }
 
     public toJSON() {
-        return { "hash": this.hash, "duration": this.duration, "clips": this.clips, "description_tags": this.description_tags };
+        return { "hash": this.hash, "duration": this.duration, "clips": this._clips!==undefined?this._clips:[], "description_tags": this._description_tags!==undefined?this._description_tags:[] };
     }
 
 

@@ -3,6 +3,8 @@ import { SOOPER_LOOPER, SooperLooper } from "./SooperLooper";
 import { Tags } from "./Tags";
 import { stringEndsWith, stringStartsWith } from "./StrUtils";
 import { mpUtils } from "./MpUtils";
+import { BaseEventListener } from "./EventListener";
+import { IChangeEvent } from "./ChangeListener";
 type sooperlooper_ = {};
 type _key = {};
 const SOOPER_LOOPER_IDEN_PREFIX = "sooperlooper_";//SOOPER_LOOPER_IDEN_PREFIX_FUNC();
@@ -202,21 +204,30 @@ function _extractNameFromIdentifier(identifier: string, prefix = SOOPER_LOOPER_I
     return name;
 }
 
-export class SooperLooperController implements ISooperLooperController {
+export class SooperLooperController extends BaseEventListener implements ISooperLooperController {
     readonly sooperLooper: SooperLooper;
     private _defaultTags = new Tags();
     private _enabled = true;
     private _selectedClip?: Clip;
     private _configOptions:ISooperLooperOptions;
     constructor(sl: SooperLooper, options: ISooperLooperOptions=getSooperLooperOptions()) {
+        super();
         print("creating sooperlooper controller");
         this.sooperLooper = sl;
+        this.sooperLooper.addListener(this);
         print("applying options");
         this._configOptions=options;
         dump("config options",this.configOptions);
         print("applying config");
         this.applyConfig(this.configOptions);
         print("done creating sooplooper controller");
+        var self=this;
+        // this.prependHandler(function(evt){
+        //     if(evt.eventOrFunctionName==="fileChanged"){
+        //         print("file changed...undefining selected clip");
+        //         self._selectedClip=undefined;
+        //     }
+        // },this);
     }
     get sooperlooperEnabled(): boolean {
         return this.enabled;
@@ -285,7 +296,13 @@ export class SooperLooperController implements ISooperLooperController {
     editDefaultTags() {
         this.defaultTags.promptForTags("default tags?");
     }
-
+    // onEvent(evt: IChangeEvent): void {
+    //     if(evt.eventOrFunctionName==="fileChanged"){
+    //         print("file changed...undefining selected clip");
+    //         this._selectedClip=undefined;
+    //     }
+    //     super.onEvent(evt);
+    // }
 
 
     getTimePos(val: number) {

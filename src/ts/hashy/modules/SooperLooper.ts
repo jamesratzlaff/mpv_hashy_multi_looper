@@ -93,12 +93,16 @@ export class SooperLooper extends BaseEventListener {
             changed = true;
             this._currentClip = undefined;
             this._clipFacade = undefined;
+            
         }
         print("checking if last file loaded is same ", "current file", this._lastFileLoaded, "fp", fp, "changed", changed);
         var doEnableCheck = this._lastFileLoaded === undefined;
         this._lastFileLoaded = fp;
         if (doEnableCheck) {
             this.loops_enabled = this._loops_enabled;
+        }
+        if(changed){
+            this.notifyWithThis("fileChanged",fp);
         }
         return changed;
     }
@@ -154,10 +158,18 @@ export class SooperLooper extends BaseEventListener {
         return this.metaObj.duration;
     }
 
+    get hasClips():boolean{
+        return this.metaObj.hasClips;
+    }
+
     private _onTimeChangeHandler(name: string, value: number | undefined): void {
         if (!this.loops_enabled) {
             return;
         }
+        if(!this.hasClips){
+            return;
+        }
+        
         let paused = mp.get_property_bool("pause", false);
         if (paused) {
             print("video is paused, not checking for time change");

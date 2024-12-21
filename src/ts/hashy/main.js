@@ -98,16 +98,38 @@ function doTheThing(evt){
 // 	mp.msg.info("duration milliseconds "+getDurationMillis());
 // 	*/
 }
+
 try{
-	print("hello");
-	var sl = sl.SOOPER_LOOPER;
-	
-	 var sooperLooperController = new SooperLooperController(sl);
+	print("checking sooper looper");
+	if(this.SOOPER_LOOPER===undefined){
+		print("loading sooper looper");
+		this.SOOPER_LOOPER=sl.SOOPER_LOOPER;
+	 	var sooperLooperController = new SooperLooperController(this.SOOPER_LOOPER);
+	} else {
+		print("SOOPER LOOPER already loaded");
+	}
 	// sooperLooperController.applyConfig();
 	// dump("sooperLooperController",sooperLooperController);
 }catch(e){
 	mp.msg.error("error",e);
 }
+// function mp_event_loop() {
+//     var wait = 0;
+//     do {
+//         var e = mp.wait_event(wait);
+//         dump(e);  // there could be a lot of prints...
+//         if (e.event != "none") {
+//             mp.dispatch_event(e);
+//             wait = 0;
+//         } else {
+//             wait = mp.process_timers() / 1000;
+//             if (wait != 0) {
+//                 mp.notify_idle_observers();
+//                 wait = mp.peek_timers_wait() / 1000;
+//             }
+//         }
+//     } while (mp.keep_running);
+// }
 // print("script name",mp.get_script_name());
 // sl.bindKeys();
 //mp.register_event("file-loaded", doTheThing);

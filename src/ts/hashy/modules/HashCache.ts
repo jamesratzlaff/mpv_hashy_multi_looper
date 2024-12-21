@@ -2,6 +2,7 @@ import { getDataDir } from "./DataDir";
 import { hashFile } from "./FileHasher";
 
 import { file_exists, deleteFileAndCleanUpEmptiness, deleteFile, writeFile } from "./IOUtils";
+import { mpUtils } from "./MpUtils";
 import { ReturnsNumberFunction, resolveNumber } from "./Range";
 
 var cacheFileExt = ".json";
@@ -239,12 +240,17 @@ export class HashCache {
     public getHash() {
         this._undefineAndDeleteHashCacheIfInvalid();
         if (this._hashCacheData == undefined) {
+            print("creating hash for "+this._ogFilePath);
             this._hashCacheData = new HashCacheData(getHashCacheFilePath(this._ogFilePath));
+            var paused=mpUtils.paused;
+            mpUtils.pause(true);
             var calcHash = hashFile(this._ogFilePath);
+            mpUtils.pause(paused);
+            print("done creating hash for "+this._ogFilePath);
             this._hashCacheData.hash(calcHash);
             this._hashCacheData.mtime=this._ogSizeAndModifiedTime.mtime;
             this._hashCacheData.size=this._ogSizeAndModifiedTime.size
-            if (this._hashCacheData.hash()) {
+            if (this._hashCacheData.hash()!==undefined) {
 
                 writeFile(this._hashCacheData.filePath, JSON.stringify(this._hashCacheData));
                 this._hashCacheIsValid = true;

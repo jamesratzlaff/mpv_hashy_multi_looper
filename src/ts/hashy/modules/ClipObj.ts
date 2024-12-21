@@ -1,4 +1,5 @@
 // import { AssignableHandlerNotifierAndObserver, CompositeNotifierAndObserver, IChangeEvent, ModificationChangeNotifier } from "./ChangeListener";
+import { IChangeEvent } from "./ChangeListener";
 import { BaseEventListener, EventListener, EventNotifier, HasNotifier } from "./EventListener";
 import { NumberRange, HasStartAndEnd, compareRange, compareLength, compareStart, compareEnd } from "./Range";
 import { binarySearch, binarySearchWithComparator } from "./Sortables";
@@ -69,13 +70,20 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         
         var me = this;
 
-        // this.prependHandler(function (evt) {
-        //     if (evt.source instanceof NumberRange) {
-        //         me.sort();
-        //     }
-        // });
+        this.prependHandler(function (evt) {
+            if (evt.source instanceof NumberRange) {
+                me.sort();
+            }
+        },me);
         // this.clips.forEach((clip)=>clip.addObserver(this.self));
     }
+
+    // onEvent(evt: IChangeEvent): void {
+    //     if(evt.source instanceof NumberRange){
+    //         this.sort();
+    //     }
+    //     super.onEvent(evt);
+    // }
 
 
     get minVal(): number | undefined {
