@@ -85,7 +85,31 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
     //     super.onEvent(evt);
     // }
 
-
+    withTagsInherited(ogClips:Clips=this):Clips{
+        this.clips.forEach((clip)=>{
+            let allTags = clip.getAllTags(ogClips.clips);
+            clip.tags.set(allTags);
+        });
+        return this;
+    }
+    copyOfInnerMostClips(withTagsInherited:boolean=true,muted:boolean=true):Clips{
+        let c=new Clips(this.getInnerMostClips(),muted);
+        if(withTagsInherited){
+            c=c.withTagsInherited(this);
+        }
+        return c;
+    }
+    copyOf(filterOrMuted:boolean|((clip:Clip)=>boolean),muted:boolean=true){
+        if(filterOrMuted===undefined){
+            filterOrMuted=true;
+        }
+        if(typeof filterOrMuted==="boolean"){
+            muted=filterOrMuted;
+            filterOrMuted=(clip)=>true;
+        }
+        var c = this.clips.filter(filterOrMuted);
+        return new Clips(c.slice(0),muted);
+    }
     get minVal(): number | undefined {
         var head = this._head;
         return head !== undefined ? head.start : undefined;
@@ -602,6 +626,38 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         }
         return result;
     }
+    getInnerMostClipAtPosFast(pos:number):Clip|undefined {
+        var clip=undefined;
+        if(this._isSorted){
+            var reso = binarySearchWithComparator(pos,this.clips,Clip.COMPARE);
+            if(reso===-Infinity){
+                reso=-0;
+            }
+            if(reso<0){
+                reso=-reso;
+            }
+            let start = reso>0?reso-1:reso;
+            let clipsAtPos = this.clips.slice(start);
+            for (var i = 0; clip === undefined && i < clipsAtPos.length; i++) {
+                var c = clipsAtPos[i];
+                if(!c.contains(pos)){
+                    if(c.start>pos){
+                        break;
+                    }
+                    continue;
+                }
+                if (!c.hasChildren(clipsAtPos)) {
+                    clip = c;
+                }
+            }
+        } else {
+            var innerMost = this.getInnerMostClipAtPos(pos);
+            if(innerMost!==null){
+                clip=innerMost;
+            }
+        }
+        return clip;
+    }
     markClipStart(pos: number): void {
         throw new Error("Method not implemented.");
     }
@@ -711,6 +767,7 @@ export class Clip extends BaseEventListener implements HasNotifier {
         return this._range;
     }
 
+    
 
     get start(): number {
         return this.range.start;
@@ -784,6 +841,9 @@ export class Clip extends BaseEventListener implements HasNotifier {
      */
     public getAllTags(clips: Clip[]) {
         var all = new Tags();
+        if(this.muted){
+            all.mute();
+        }
         all.add(this.tags);
         var parentClips = this.getClipsContainingMe(clips);
         parentClips.forEach(function (parentClip) {

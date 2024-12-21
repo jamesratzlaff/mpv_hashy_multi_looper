@@ -20,6 +20,7 @@ export class MetaObj extends BaseEventListener{
     private _jsonMtime: number;
     private _modified: boolean;
     private _saveOnModify: boolean = false;
+    
 
     constructor(filepath?: string, duration?: number) {
         super();
@@ -102,8 +103,7 @@ export class MetaObj extends BaseEventListener{
 
     get copyOfClips(): Clips {
         this._modified = false;
-        var cF = new Clips(this.clips.getInnerMostClips(), true);
-        // dump("copyOfClips",cF);
+        var cF = this.clips.copyOfInnerMostClips();
         return cF;
     }
 

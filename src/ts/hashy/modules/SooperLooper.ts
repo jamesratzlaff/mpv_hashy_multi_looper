@@ -6,7 +6,7 @@ import { Tags } from "./Tags";
 import { mpUtils } from "./MpUtils";
 import { BaseEventListener } from "./EventListener";
 
-
+const DEFAULT_TAG_FILTER: ((tags: Tags) => boolean) = (tags) => true;
 export class SooperLooper extends BaseEventListener {
     private _metaobj: MetaObj | undefined;
     private _loops_enabled: boolean;
@@ -18,9 +18,11 @@ export class SooperLooper extends BaseEventListener {
     private _observingTimeChange: boolean = false;
     private _defaultTags = new Tags();
     private _saveOnModify = false;
-    private _controller?:ISooperLooperController;
-    private _firstFile?:string;
-    private _filePlayed?:boolean;
+    private _controller?: ISooperLooperController;
+    private _firstFile?: string;
+    private _filePlayed?: boolean;
+    private _tagFilter: (tags: Tags) => boolean = DEFAULT_TAG_FILTER;
+    private _filteredClips?: Clips;
 
     constructor() {
         super();
@@ -28,7 +30,7 @@ export class SooperLooper extends BaseEventListener {
 
 
 
-        let me=this;
+        let me = this;
         this._onFileLoadHandler = function (): boolean {
             return me.checkIfFileIsSame();
         }
@@ -37,6 +39,7 @@ export class SooperLooper extends BaseEventListener {
         this.prependHandler(function (evt) {
             dump(evt);
             me._clipFacade = undefined;
+            me._filteredClips = undefined;
         }, this);
         this._timeChangeHandler = //function (n: string, v: number | undefined): void {};
             function (n: string, v: number | undefined): void {
@@ -46,9 +49,9 @@ export class SooperLooper extends BaseEventListener {
             }
 
     }
-    get controller(){
-        if(this._controller===undefined){
-            this._controller=new SooperLooperController(this);
+    get controller() {
+        if (this._controller === undefined) {
+            this._controller = new SooperLooperController(this);
         }
         return this._controller;
     }
@@ -74,13 +77,13 @@ export class SooperLooper extends BaseEventListener {
         return this._loops_enabled;
     }
 
-    get defaultTags(){
+    get defaultTags() {
         return this._defaultTags;
     }
 
-    set defaultTags(tag:(Tags | string | string[]|undefined)){
-        if(tag===undefined){
-            tag=[];
+    set defaultTags(tag: (Tags | string | string[] | undefined)) {
+        if (tag === undefined) {
+            tag = [];
         }
         this._defaultTags.set(tag);
 
@@ -89,14 +92,14 @@ export class SooperLooper extends BaseEventListener {
     checkIfFileIsSame(): boolean {
         let fp = mp.get_property("path", undefined);
         let changed = false;
-        let inContinuousLoop=false;
+        let inContinuousLoop = false;
         if (fp !== this._lastFileLoaded) {
-            if(this._firstFile===undefined){
-                this._firstFile=fp;
+            if (this._firstFile === undefined) {
+                this._firstFile = fp;
             } else {
-                if(!this._filePlayed){
-                    if(fp===this._firstFile){
-                        inContinuousLoop=true;
+                if (!this._filePlayed) {
+                    if (fp === this._firstFile) {
+                        inContinuousLoop = true;
                     }
                 }
             }
@@ -104,7 +107,7 @@ export class SooperLooper extends BaseEventListener {
             changed = true;
             this._currentClip = undefined;
             this._clipFacade = undefined;
-            
+
         }
         print("checking if last file loaded is same ", "current file", this._lastFileLoaded, "fp", fp, "changed", changed);
         var doEnableCheck = this._lastFileLoaded === undefined;
@@ -112,11 +115,11 @@ export class SooperLooper extends BaseEventListener {
         if (doEnableCheck) {
             this.loops_enabled = this._loops_enabled;
         }
-        if(changed){
+        if (changed) {
             //this should clear any selected clip vars in the controller object
-            this.notifyWithThis("fileChanged",fp);
+            this.notifyWithThis("fileChanged", fp);
         }
-        if(inContinuousLoop){
+        if (inContinuousLoop) {
             mp.osd_message("no loops to play...pausing");
             mpUtils.pause(true);
         }
@@ -144,6 +147,7 @@ export class SooperLooper extends BaseEventListener {
     get clips() {
         if (this._clipFacade == undefined || this.metaObj.modified) {
             this._clipFacade = this.metaObj.copyOfClips;
+            this._filteredClips = undefined;
         }
         return this._clipFacade;
     }
@@ -174,22 +178,55 @@ export class SooperLooper extends BaseEventListener {
         return this.metaObj.duration;
     }
 
-    get hasClips():boolean{
+    get hasClips(): boolean {
         return this.metaObj.hasClips;
+    }
+    get tagFilter(): ((tags: Tags) => boolean) {
+        if (this._tagFilter === undefined || this._tagFilter === null) {
+            this._tagFilter = DEFAULT_TAG_FILTER;
+        }
+        return this._tagFilter;
+    }
+    set tagFilter(filter: (tags: Tags) => boolean) {
+        if (filter === undefined || filter === null) {
+            filter = DEFAULT_TAG_FILTER;
+        }
+        this._filteredClips = undefined;
+        this._tagFilter = filter;
+    }
+    private _getTagFilterAsClipFilter(): (clip: Clip) => boolean {
+        let tagFilter = this.tagFilter;
+        let result: (clip: Clip) => boolean = (clip: Clip) => {
+            return tagFilter(clip.tags);
+        };
+        return result;
+    }
+    get filteredClips(): Clips {
+        let result: Clips = this.clips;
+        if (this._filteredClips === undefined) {
+            if (this.tagFilter !== undefined) {
+                let filt = this._getTagFilterAsClipFilter();
+                this._filteredClips = result.copyOf(filt);
+            }
+        }
+        if (this._filteredClips !== undefined) {
+            result = this._filteredClips;
+        }
+        return result;
     }
 
     private _onTimeChangeHandler(name: string, value: number | undefined): void {
         if (!this.loops_enabled) {
             return;
         }
-        if(!this.hasClips){
+        if (!this.hasClips) {
             return;
         }
-        
+
         let paused = mpUtils.paused;
         if (paused) {
-            var seeking = mp.get_property_bool("seek",false);
-            if(seeking){
+            var seeking = mp.get_property_bool("seek", false);
+            if (seeking) {
                 print("video is seeking");
             }
             print("video is paused, not checking for time change");
@@ -199,42 +236,48 @@ export class SooperLooper extends BaseEventListener {
         if (val !== undefined) {
             val = (val / this.durationMillis) * 100;
         }
-
-        if (this.clips.length > 0 && val !== undefined && val < 100) {
+        var clips = this.filteredClips;
+        
+        if (clips.length > 0 && val !== undefined && val < 100) {
             var changeClip = false;
-            if(!this._filePlayed){
-                this._filePlayed=true;
+            if (!this._filePlayed) {
+                this._filePlayed = true;
             }
             if (val !== undefined) {
                 var isValidPos = false;
                 if (this.currentClip !== undefined) {
                     if (!this.currentClip.contains(val)) {
-                        this.currentClip = undefined;
-                    } else {
-                        isValidPos = true;
-                    }
+                        this.currentClip = SooperLooper.getClipThatContains(clips,val);
+                        dump("currentClip", this.currentClip);
+                    } 
+                    isValidPos = this.currentClip!==undefined;;
+                    
                 }
                 if (!isValidPos) {
                     if (this.currentClip === undefined) {
-                        var nxtClip = this.clips.getNextClosestClip(val);
+                        var nxtClip = clips.getNextClosestClip(val);
                         // dump("value", val, "nxtClip", nxtClip, "clips", this.clips);
                         this.currentClip = nxtClip;
                     }
                     if (this.currentClip === undefined) {
                         mp.commandv("playlist-next");
                     } else {
-                        
-                       mpUtils.setTimePosFromPercentOfDurationMillis(this.currentClip.start);//(this.currentClip.start / 100) * (parseFloat(mp.get_property("duration", "1"))) + "");
+
+                        mpUtils.setTimePosFromPercentOfDurationMillis(this.currentClip.start);//(this.currentClip.start / 100) * (parseFloat(mp.get_property("duration", "1"))) + "");
                     }
+
+                } else {
 
                 }
             }
-        } else if(val!==undefined && val>=100){
+        } else if (val !== undefined && val >= 100) {
             mp.commandv("playlist-next");
         }
     }
 
-    
+    static getClipThatContains(clips:Clips, val:number):Clip|undefined{
+        return clips.getInnerMostClipAtPosFast(val);
+    }
 
 
 }
