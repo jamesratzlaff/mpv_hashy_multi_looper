@@ -57,7 +57,6 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
                 var clipJson = clips[i];
                 var clip = undefined;
                 clip =(clipJson instanceof Clip)?clipJson.copy(this.muted):new Clip(clipJson, this.muted);
-                dump("new Clips",clip);
                 if (!this.muted) {
                     clip.addObserver(this);
                 }
@@ -89,15 +88,12 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
     withTagsInherited(ogClips:Clips=this):Clips{
         this.clips.forEach((clip)=>{
             let allTags = clip.getAllTags(ogClips.clips);
-            dump("allTags",allTags);
             clip.tags.set(allTags);
         });
         return this;
     }
     copyOfInnerMostClips(withTagsInherited:boolean=true,muted:boolean=true):Clips{
-        dump("copyOfInnerMostClips","this._clips",this._clips);
         let innerMostClips =this.getInnerMostClips(); 
-        dump("copyOfInnerMostClips","innerMostClips",innerMostClips);
         let c=new Clips(innerMostClips,muted);
         if(withTagsInherited){
             c=c.withTagsInherited(this);
@@ -388,7 +384,14 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         throw new Error("Method not implemented.");
     }
 
-
+    scale(scalar:number):Clips{
+        if(scalar!==0&&scalar!==1){
+            this.clips.forEach(clip=>{
+                clip.range.scale(scalar);
+            });
+        }
+        return this;
+    }
 
     getNextClipBoundary(pos: number): number {
         var result = undefined;
@@ -743,10 +746,6 @@ export class Clip extends BaseEventListener implements HasNotifier {
                 }
                 this._range = start._range.copy(this.muted);
                 this._tags = start._tags.copy(this.muted);
-                dump("new Clip","this", this,"start",start);
-                if(this.start===50&&this.end===85&&this.tags.length===0){
-                    dump("wtf",new Error("wtf").stack);
-                }
                 this.enabled = start.enabled;
                 isCopy = true;
             }
@@ -854,7 +853,6 @@ export class Clip extends BaseEventListener implements HasNotifier {
             all.mute();
         }
         all.add(this.tags);
-        dump("this.tags",this.tags,"all",all);
         var parentClips = this.getClipsContainingMe(clips);
         parentClips.forEach(function (parentClip) {
             all.add(parentClip.tags);
@@ -870,6 +868,14 @@ export class Clip extends BaseEventListener implements HasNotifier {
 
     public getChildClips(clips: Clip[]) {
         return this.filterContains(clips);
+    }
+
+    public getImmediateChildClips(clips:Clip[]):Clip[]{
+        var self = this;
+        var filtered = clips.filter(function (el) { 
+            let elParent = el.getParentClip(clips)
+            return self.contains(el)&&elParent!==null&&Clip.COMPARE(elParent,self)===0 });
+        return filtered;
     }
 
     public getParentClip(clips: Clip[]) {
@@ -895,6 +901,21 @@ export class Clip extends BaseEventListener implements HasNotifier {
             }
         }
         return result;
+    }
+
+    public hierarchicallyEnabled(clips:Clips|Clip[]):boolean{
+        if(clips instanceof Clips){
+            clips=clips.clips;
+        }
+        var enabled = this.enabled;
+        if(enabled){
+            var childClips = this.getImmediateChildClips(clips);
+            for(var i=0;enabled&&i<childClips.length;i++){
+                let childClip=childClips[i];
+                enabled=!childClip.hierarchicallyEnabled(clips);
+            }
+        }
+        return enabled;
     }
 
     public hasChildren(clips: Clip[]) {

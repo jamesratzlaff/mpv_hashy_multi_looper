@@ -39,8 +39,6 @@ export class SooperLooper extends BaseEventListener {
         this.prependHandler(function (evt) {
             me._clipFacade = undefined;
             me._filteredClips = undefined;
-            // me._currentClip = undefined;
-            // me._metaobj = undefined;
         }, this);
         this._timeChangeHandler = //function (n: string, v: number | undefined): void {};
             function (n: string, v: number | undefined): void {
@@ -144,9 +142,17 @@ export class SooperLooper extends BaseEventListener {
         }
         return this._metaobj;
     }
+    private get clipMarkersForUI(){
+        let clipMarkers = this.metaObj.clips.copyOf(true);
+        let enablementMap = clipMarkers.clips.map(clip=>clip.hierarchicallyEnabled(clipMarkers));
+        clipMarkers.clips.forEach((clip,i)=>clip.enabled=enablementMap[i]);
+        clipMarkers.scale(mpUtils.duration/100);
+        return clipMarkers;
+    }
 
     get clips() {
         if (this._clipFacade == undefined || this.metaObj.modified) {
+            mp.commandv("script-message","set_clip_markers",JSON.stringify(this.clipMarkersForUI));
             this._clipFacade = this.metaObj.copyOfClips;
             this._filteredClips = undefined;
         }
@@ -234,8 +240,6 @@ export class SooperLooper extends BaseEventListener {
             print("video is paused, not checking for time change");
             return;
         }
-
-
         var val = value !== undefined ? value * 1000 : undefined;
         if (val !== undefined) {
             val = (val / this.durationMillis) * 100;
@@ -244,7 +248,6 @@ export class SooperLooper extends BaseEventListener {
         var clips = this.filteredClips;
 
         if (clips.length > 0 && val !== undefined && val < 100) {
-
             var changeClip = false;
             if (!this._filePlayed) {
                 this._filePlayed = true;
