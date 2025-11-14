@@ -13,15 +13,15 @@ export interface HasStartAndEnd {
 
 export class NumberRange extends BaseEventNotifier implements HasStartAndEnd, Comparable<NumberRange | HasStartAndEnd>, HasNotifier {
 	public static createRandomNumberRange() {
-		var val1 = Math.random() * 100;
-		var val2 = Math.random() * 100;
-		var start = Math.min(val1, val2);
-		var end = Math.max(val1, val2);
+		let val1 = Math.random() * 100;
+		let val2 = Math.random() * 100;
+		let start = Math.min(val1, val2);
+		let end = Math.max(val1, val2);
 		return new NumberRange(start, end);
 	}
 
 	public static createRandomNumberRanges(amt: number) {
-		var arr = [];
+		let arr = [];
 		for (let i = 0; i < amt; i++) {
 			arr.push(this.createRandomNumberRange());
 		}
@@ -41,14 +41,14 @@ export class NumberRange extends BaseEventNotifier implements HasStartAndEnd, Co
 			}
 			endVal=100.0;
 		}
-		var end:number = (typeof endVal === "number")?endVal:100.0;
-		var modified = false;
+		let end:number = (typeof endVal === "number")?endVal:100.0;
+		let modified = false;
 		if (typeof start == "object") {
-			var objStart = start.start;
+			let objStart = start.start;
 			if (typeof objStart == "function") {
 				objStart = start.start();
 			}
-			var objEnd = start.end;
+			let objEnd = start.end;
 			if (typeof objEnd == "function") {
 				objEnd = start.end();
 			}
@@ -64,12 +64,12 @@ export class NumberRange extends BaseEventNotifier implements HasStartAndEnd, Co
 			end = 100.0;
 		}
 		if (end < start) {
-			var tmpEnd = end;
+			let tmpEnd = end;
 			end = start;
 			start = tmpEnd;
 		}
 		if (end === start) {
-			var secsPerFrame = 0.00001;
+			let secsPerFrame = 0.00001;
 			end = start + secsPerFrame;
 		}
 		this.start = start;
@@ -83,7 +83,7 @@ export class NumberRange extends BaseEventNotifier implements HasStartAndEnd, Co
 			return this;
 		}
 		if (value != this.start) {
-			var cpy = this.copy();
+			let cpy = this.copy();
 			cpy.start = value;
 			return cpy;
 		}
@@ -95,7 +95,7 @@ export class NumberRange extends BaseEventNotifier implements HasStartAndEnd, Co
 			return this;
 		}
 		if (value != this.end) {
-			var cpy = this.copy();
+			let cpy = this.copy();
 			cpy.end = value;
 			return cpy;
 		}
@@ -104,19 +104,19 @@ export class NumberRange extends BaseEventNotifier implements HasStartAndEnd, Co
 
 	public filterContains(collection: (number | HasStartAndEnd | NumberRange)[]): (number | HasStartAndEnd | NumberRange)[] {
 		if (Array.isArray(collection)) {
-			var result = collection.filter(this.contains);
+			let result = collection.filter(this.contains);
 			return result;
 		}
 		return collection;
 	}
 
 	public getAllContainingMe(collection: (HasStartAndEnd | NumberRange)[]): (HasStartAndEnd | NumberRange)[] {
-		var result = collection.filter(this.containedBy);
+		let result = collection.filter(this.containedBy);
 		return result;
 	}
 
 	public getParent(collection: (HasStartAndEnd | NumberRange)[]): HasStartAndEnd | NumberRange | null {
-		var containsMe = this.getAllContainingMe(collection);
+		let containsMe = this.getAllContainingMe(collection);
 
 		if (containsMe && containsMe.length > 0) {
 			if (containsMe.length === 1) {
@@ -134,7 +134,7 @@ export class NumberRange extends BaseEventNotifier implements HasStartAndEnd, Co
 					}
 					return a;
 				} else {
-					var aNumRange = new NumberRange(a);
+					let aNumRange = new NumberRange(a);
 					if (aNumRange.containedBy(b)) {
 						return aNumRange;
 					}
@@ -198,7 +198,7 @@ export class NumberRange extends BaseEventNotifier implements HasStartAndEnd, Co
 		return cpy;
 	}
 	public copyAndSet(start: number, end: number) {
-		var cpy = this.copy();
+		let cpy = this.copy();
 		cpy.set(start, end);
 		return cpy;
 	}
@@ -412,8 +412,8 @@ export function resolveNumber(num: number | ReturnsNumberFunction) {
 }
 
 function lengthOf(a: HasStartAndEnd | NumberRange | number): number {
-	var _start = _extractStart(a);
-	var _end = _extractEnd(a);
+	let _start = _extractStart(a);
+	let _end = _extractEnd(a);
 	return _end - _start;
 }
 export function compareLength(a: HasStartAndEnd | NumberRange | number, b: HasStartAndEnd | NumberRange | number): number {
@@ -446,7 +446,7 @@ export function compareEnd(a: HasStartAndEnd | NumberRange | number, b: HasStart
 	// return cmp;
 }
 export function compareRange(a: HasStartAndEnd | NumberRange | number, b: HasStartAndEnd | NumberRange | number): number {
-	var cmp = 0;
+	let cmp = 0;
 	cmp=compareStart(a,b);
 	if(cmp==0){
 		cmp=compareEnd(b,a);

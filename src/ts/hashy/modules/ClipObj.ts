@@ -53,9 +53,9 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
                 clips = clips.clips.slice(0);
             }
             // dump("Clips_ctor ", clips);
-            for (var i = 0; i < clips.length; i++) {
-                var clipJson = clips[i];
-                var clip = undefined;
+            for (let i = 0; i < clips.length; i++) {
+                let clipJson = clips[i];
+                let clip = undefined;
                 clip =(clipJson instanceof Clip)?clipJson.copy(this.muted):new Clip(clipJson, this.muted);
                 if (!this.muted) {
                     clip.addObserver(this);
@@ -68,7 +68,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
 
         this.sort();
         
-        var me = this;
+        let me = this;
 
         this.prependHandler(function (evt) {
             if (evt.source instanceof NumberRange) {
@@ -108,24 +108,24 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
             muted=filterOrMuted;
             filterOrMuted=(clip)=>true;
         }
-        var c = this.clips.filter(filterOrMuted);
+        let c = this.clips.filter(filterOrMuted);
         return new Clips(c.slice(0),muted);
     }
     get minVal(): number | undefined {
-        var head = this._head;
+        let head = this._head;
         return head !== undefined ? head.start : undefined;
     }
     get maxVal(): number | undefined {
-        var tail = this._tail;
+        let tail = this._tail;
         return tail !== undefined ? tail.end : undefined;
     }
     get length(): number {
         return this._clips.length;
     }
     public indexOf(clip: Clip): number {
-        var result = -1;
+        let result = -1;
         if (this._isSorted) {
-            var idx = binarySearchWithComparator(clip, this.clips, Clip.COMPARE);//this.clips.indexOf(clip);
+            let idx = binarySearchWithComparator(clip, this.clips, Clip.COMPARE);//this.clips.indexOf(clip);
             if (idx >= 0) {
                 result = idx;
             }
@@ -136,13 +136,13 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
     }
 
     public getNext(clip: Clip | number | undefined) {
-        var nxt= this.getPreviousOrNext(clip,true);
+        let nxt= this.getPreviousOrNext(clip,true);
         dump("getNext",clip,nxt);
         return nxt;
 
     }
     public getPrev(clip: Clip | number | undefined){
-        var prev = this.getPreviousOrNext(clip,false);
+        let prev = this.getPreviousOrNext(clip,false);
         dump("getPrev",clip,prev);
         return prev;
     }
@@ -157,7 +157,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
             return clip;
         }
         if (clip !== undefined) {
-            var clipLoc = binarySearchWithComparator(clip, this.clips, Clip.COMPARE);
+            let clipLoc = binarySearchWithComparator(clip, this.clips, Clip.COMPARE);
             if(clipLoc>-1){
                 if(clipLoc===0&&!forward){
                     if(this.length>0){
@@ -176,15 +176,15 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
     }
 
     public rangeAt(value: HasStartAndEnd | Clip | NumberRange | number): number {
-        var result = NaN;
+        let result = NaN;
         if (value instanceof Clip) {
             value = value.range;
         }
         if (this._isSorted) {
             result = binarySearchWithComparator(value, this.clips, Clip.COMPARE);
         } else {
-            for (var i = 0; result === -1 && i < this.clips.length; i++) {
-                var current = this.clips[i];
+            for (let i = 0; result === -1 && i < this.clips.length; i++) {
+                let current = this.clips[i];
                 if (current === value || current.range.similarTo(value)) {
                     result = i;
                 }
@@ -204,11 +204,11 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         if (!this.clips) {
             return 0.0;
         }
-        var before = this.getClipBefore(end);
+        let before = this.getClipBefore(end);
         if (before) {
             return before.end;
         }
-        var parent = this.getParentClip(end);
+        let parent = this.getParentClip(end);
         if (parent) {
             return parent.start;
         }
@@ -218,11 +218,11 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         if (!this.clips) {
             return 100.0;
         }
-        var after = this.getClipAfter(start);
+        let after = this.getClipAfter(start);
         if (after) {
             return after.start;
         }
-        var parent = this.getParentClip(start);
+        let parent = this.getParentClip(start);
         if (parent) {
             return parent.end;
         }
@@ -274,19 +274,19 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
     }
 
     public getClipAfter(pos: number): Clip | null {
-        var filtered = this.clips.filter(function (clip) {
+        let filtered = this.clips.filter(function (clip) {
             return clip.start >= pos;
         });
-        if (filtered) {
+        if (filtered!==null&&filtered.length>0) {
             return filtered[0];
         }
         return null;
     }
     public getClipBefore(pos: number): Clip | null {
-        var filtered = this.clips.filter(function (clip) {
+        let filtered = this.clips.filter(function (clip) {
             return clip.end <= pos;
         });
-        if (filtered) {
+        if (filtered!==null&&filtered.length>0) {
             return filtered[filtered.length - 1];
         }
         return null;
@@ -296,14 +296,14 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
 
         //let idx = this._getClipIdx(clip,(c,cl)=>cl.contains(c),-1);
 
-        var clips = this.clips.filter(function (c) {
+        let clips = this.clips.filter(function (c) {
             return c.contains(clip);
         });
         return clips;
     }
     public getParentClip(clip: HasStartAndEnd | number | Clip | NumberRange): Clip | null {
-        var containingClips = this.getClipsContaining(clip);
-        var result = null;
+        let containingClips = this.getClipsContaining(clip);
+        let result = null;
         if (containingClips && containingClips.length > 0) {
             if (containingClips.length === 1) {
                 result = containingClips[0];
@@ -357,12 +357,12 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         throw new Error("Method not implemented.");
     }
     getInnerMostClips(clip: HasStartAndEnd = fullRange): Clip[] {
-        var all = this.clips.filter(function (cl) {
+        let all = this.clips.filter(function (cl) {
             return cl.containedBy(clip);
         });
         // dump("all before", all);
         all = all.filter(function (c) {
-            var hashChildren = c.hasChildren(all);
+            let hashChildren = c.hasChildren(all);
             return !hashChildren;
         });
         // dump("all after", all);
@@ -394,8 +394,8 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
     }
 
     getNextClipBoundary(pos: number): number {
-        var result = undefined;
-        var clip: Clip | null | undefined = this.getInnerMostClipAtPos(pos);
+        let result = undefined;
+        let clip: Clip | null | undefined = this.getInnerMostClipAtPos(pos);
         dump("getNextClipBoundary", "clip", clip);
         if (clip !== undefined && clip !== null) {
             result = clip.end;
@@ -413,8 +413,8 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         return result;
     }
     getPrevClipBoundary(pos: number): number {
-        var result = undefined;
-        var clip: Clip | null | undefined = this.getInnerMostClipAtPos(pos);
+        let result = undefined;
+        let clip: Clip | null | undefined = this.getInnerMostClipAtPos(pos);
         if (clip !== undefined && clip !== null) {
             result = clip.start;
         }
@@ -431,9 +431,9 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         return result;
     }
     getNextClosestClipExcl(pos: number): Clip | undefined {
-        var result = undefined;
-        for (var i = 0; result === undefined && i < this.clips.length; i++) {
-            var clip = this.clips[i];
+        let result = undefined;
+        for (let i = 0; result === undefined && i < this.clips.length; i++) {
+            let clip = this.clips[i];
             if (clip.start > pos) {
                 result = clip;
             }
@@ -441,7 +441,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         return result;
     }
     getNextClosestClip(pos: number): Clip | undefined {
-        var result = undefined;
+        let result = undefined;
         // let startIdx = binarySearchWithComparator(pos,this.clips,Clip.COMPARE_START);
         // if(startIdx<0){
         //     if(startIdx===-Infinity){
@@ -450,8 +450,8 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         //     startIdx=-startIdx;
         // }
 
-        for (var i = 0/*startIdx*/; result === undefined && i < this.clips.length; i++) {
-            var clip = this.clips[i];
+        for (let i = 0/*startIdx*/; result === undefined && i < this.clips.length; i++) {
+            let clip = this.clips[i];
             if (clip.start >= pos) {
                 result = clip;
             }
@@ -459,9 +459,9 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         return result;
     }
     getPrevClosestClipExcl(pos: number): Clip | undefined {
-        var result = undefined;
-        for (var i = this.clips.length - 1; result === undefined && i > -1; i--) {
-            var clip = this.clips[i];
+        let result = undefined;
+        for (let i = this.clips.length - 1; result === undefined && i > -1; i--) {
+            let clip = this.clips[i];
             if (clip.end < pos) {
                 result = clip;
             }
@@ -469,9 +469,9 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         return result;
     }
     getPrevClosestClip(pos: number): Clip | undefined {
-        var result = undefined;
-        for (var i = this.clips.length - 1; result === undefined && i > -1; i--) {
-            var clip = this.clips[i];
+        let result = undefined;
+        for (let i = this.clips.length - 1; result === undefined && i > -1; i--) {
+            let clip = this.clips[i];
             if (clip.end <= pos) {
                 result = clip;
             }
@@ -489,7 +489,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
                 end = this.getAssumedEndPos(start);
             }
         }
-        var clip = undefined
+        let clip = undefined
         if (start === undefined) {
             start = 0.0;
         }
@@ -502,13 +502,13 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         return this.addClip(clip);
     }
     private get _head(): Clip | undefined {
-        var clps = this._clips;
-        var len = clps.length;
+        let clps = this._clips;
+        let len = clps.length;
         if (len > 0) {
-            var clp = clps[0];
+            let clp = clps[0];
             if (!this._isSorted && len > 1) {
                 clp = clps.reduce((a, b) => {
-                    var cmp = Clip.COMPARE(a, b);
+                    let cmp = Clip.COMPARE(a, b);
                     if (cmp < 0) {
                         return a;
                     }
@@ -520,13 +520,13 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         return undefined;
     }
     private get _tail(): Clip | undefined {
-        var clps = this._clips;
-        var len = clps.length;
+        let clps = this._clips;
+        let len = clps.length;
         if (len > 0) {
-            var clp = clps[len - 1];
+            let clp = clps[len - 1];
             if (!this._isSorted && len > 1) {
                 clp = clps.reduce((a, b) => {
-                    var cmp = Clip.COMPARE(a, b);
+                    let cmp = Clip.COMPARE(a, b);
                     if (cmp > 0) {
                         return a;
                     }
@@ -539,21 +539,21 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
     }
     private _getAddToArrayFunc(clip: Clip): { losesSorting?: boolean, adds: boolean, context: any, func: ((...clip: Clip[]) => number)/*, info?:any*/ } {
 
-        var reso: { losesSorting?: boolean, adds: boolean, func: ((...clip: Clip[]) => number), context: any } = { "adds": true, "func": this.clips.push, "context": this.clips };
+        let reso: { losesSorting?: boolean, adds: boolean, func: ((...clip: Clip[]) => number), context: any } = { "adds": true, "func": this.clips.push, "context": this.clips };
         if (this.length === 0) {
             return reso;
         }
-        var existingIdx = this.rangeAt(clip);
+        let existingIdx = this.rangeAt(clip);
         if (existingIdx > -1) {
-            var existingClip = this._clips[existingIdx];
+            let existingClip = this._clips[existingIdx];
             reso.adds = false;
             reso.context = existingClip;
             reso.func = existingClip.acquireTagsIfSimilarRange;
             return reso;
         }
-        var cmp = 0;
+        let cmp = 0;
         if (this._isSorted) {
-            var curr = this._tail;
+            let curr = this._tail;
             cmp = curr !== undefined ? Clip.COMPARE(clip, curr) : 0;
             if (cmp < 0) {
                 curr = this._head;
@@ -572,7 +572,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
     }
 
     addClip(clip: Clip): Clip {
-        var added = false;
+        let added = false;
         if (clip !== undefined && clip !== null) {
             clip.addObserver(this);
             let idx = this.rangeAt(clip);
@@ -623,11 +623,11 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         return clip;
     }
     getInnerMostClipAtPos(pos: number): Clip | null {
-        var clipsAtPos = this.getClipsAtPos(pos);
-        var result = null;
+        let clipsAtPos = this.getClipsAtPos(pos);
+        let result = null;
         dump("getInnerMostClipAtPos", "pos", pos, "clipsAtPos", clipsAtPos);
-        for (var i = 0; result === null && i < clipsAtPos.length; i++) {
-            var clip = this.clips[i];
+        for (let i = 0; result === null && i < clipsAtPos.length; i++) {
+            let clip = this.clips[i];
             if (!clip.hasChildren(clipsAtPos)) {
                 result = clip;
             }
@@ -635,9 +635,9 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
         return result;
     }
     getInnerMostClipAtPosFast(pos:number):Clip|undefined {
-        var clip=undefined;
+        let clip=undefined;
         if(this._isSorted){
-            var reso = binarySearchWithComparator(pos,this.clips,Clip.COMPARE);
+            let reso = binarySearchWithComparator(pos,this.clips,Clip.COMPARE);
             if(reso===-Infinity){
                 reso=-0;
             }
@@ -646,8 +646,8 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
             }
             let start = reso>0?reso-1:reso;
             let clipsAtPos = this.clips.slice(start);
-            for (var i = 0; clip === undefined && i < clipsAtPos.length; i++) {
-                var c = clipsAtPos[i];
+            for (let i = 0; clip === undefined && i < clipsAtPos.length; i++) {
+                let c = clipsAtPos[i];
                 if(!c.contains(pos)){
                     if(c.start>pos){
                         break;
@@ -659,7 +659,7 @@ export class Clips extends BaseEventListener implements ClipContainer, HasNotifi
                 }
             }
         } else {
-            var innerMost = this.getInnerMostClipAtPos(pos);
+            let innerMost = this.getInnerMostClipAtPos(pos);
             if(innerMost!==null){
                 clip=innerMost;
             }
@@ -721,7 +721,7 @@ export class Clip extends BaseEventListener implements HasNotifier {
     constructor(start?: any, end?: number | boolean, tags?: string[], alias?: string) {
         super();
         //dump("Clip_ctor", "start", start);
-        var isCopy = false;
+        let isCopy = false;
         if (typeof end === "boolean") {
             if (end) {
                 this.mute();
@@ -805,17 +805,17 @@ export class Clip extends BaseEventListener implements HasNotifier {
         }
     }
     acquireTagsIfSimilarRange(...others: Clip[]): number {
-        var beforeLen = this.tags.length;
-        var numSimilar = 0;
-        for (var i = 0; i < others.length; i++) {
-            var other = others[i];
+        let beforeLen = this.tags.length;
+        let numSimilar = 0;
+        for (let i = 0; i < others.length; i++) {
+            let other = others[i];
             if (this.range.similarTo(other)) {
                 numSimilar += 1;
                 this.acquireTagsFrom(other);
             }
         }
 
-        var diff = this.tags.length - beforeLen;
+        let diff = this.tags.length - beforeLen;
         if (numSimilar === 0) {
             diff = -1;
         }
@@ -836,7 +836,7 @@ export class Clip extends BaseEventListener implements HasNotifier {
         if (!clips) {
             return [];
         }
-        var filteredClips = clips.filter(function (clip) {
+        let filteredClips = clips.filter(function (clip) {
             clip.range.contains(clip);
         });
         return filteredClips;
@@ -848,12 +848,12 @@ export class Clip extends BaseEventListener implements HasNotifier {
      * @returns all tags for this clip which includes this clips individual tags and all parents of this clip's tags
      */
     public getAllTags(clips: Clip[]) {
-        var all = new Tags();
+        let all = new Tags();
         if(this.muted){
             all.mute();
         }
         all.add(this.tags);
-        var parentClips = this.getClipsContainingMe(clips);
+        let parentClips = this.getClipsContainingMe(clips);
         parentClips.forEach(function (parentClip) {
             all.add(parentClip.tags);
         });
@@ -861,8 +861,8 @@ export class Clip extends BaseEventListener implements HasNotifier {
     }
 
     public filterContains(values: (Clip | HasStartAndEnd | number | NumberRange)[]): (Clip | HasStartAndEnd | number | NumberRange)[] {
-        var self = this;
-        var filtered = values.filter(function (el) { return self.contains(el) });
+        let self = this;
+        let filtered = values.filter(function (el) { return self.contains(el) });
         return filtered;
     }
 
@@ -871,16 +871,16 @@ export class Clip extends BaseEventListener implements HasNotifier {
     }
 
     public getImmediateChildClips(clips:Clip[]):Clip[]{
-        var self = this;
-        var filtered = clips.filter(function (el) { 
+        let self = this;
+        let filtered = clips.filter(function (el) { 
             let elParent = el.getParentClip(clips)
             return self.contains(el)&&elParent!==null&&Clip.COMPARE(elParent,self)===0 });
         return filtered;
     }
 
     public getParentClip(clips: Clip[]) {
-        var filteredClips = this.getClipsContainingMe(clips);
-        var result = null;
+        let filteredClips = this.getClipsContainingMe(clips);
+        let result = null;
         if (filteredClips && filteredClips.length > 0) {
             if (filteredClips.length == 1) {
                 result = filteredClips[0];
@@ -907,10 +907,10 @@ export class Clip extends BaseEventListener implements HasNotifier {
         if(clips instanceof Clips){
             clips=clips.clips;
         }
-        var enabled = this.enabled;
+        let enabled = this.enabled;
         if(enabled){
-            var childClips = this.getImmediateChildClips(clips);
-            for(var i=0;enabled&&i<childClips.length;i++){
+            let childClips = this.getImmediateChildClips(clips);
+            for(let i=0;enabled&&i<childClips.length;i++){
                 let childClip=childClips[i];
                 enabled=!childClip.hierarchicallyEnabled(clips);
             }
@@ -919,12 +919,12 @@ export class Clip extends BaseEventListener implements HasNotifier {
     }
 
     public hasChildren(clips: Clip[]) {
-        var childClips = this.getChildClips(clips);
+        let childClips = this.getChildClips(clips);
         return childClips.length !== 0;
     }
 
     toJSON(): Object {
-        var asObj = { "start": this.start, "end": this.end, "tags": this.tags, "enabled": this.enabled, "alias": this.alias };
+        let asObj = { "start": this.start, "end": this.end, "tags": this.tags, "enabled": this.enabled, "alias": this.alias };
         return asObj;
     }
 
@@ -936,14 +936,14 @@ export class Clip extends BaseEventListener implements HasNotifier {
     }
 
     toFormattedString(duration?: number): string {
-        var s = this.start;
-        var e = this.end;
+        let s = this.start;
+        let e = this.end;
         if (duration !== undefined) {
-            var sd = duration / 100.0;
+            let sd = duration / 100.0;
             s = s * sd;
             e = s * sd;
         }
-        var chckBox = this.enabled ? '☑' : '☐';
+        let chckBox = this.enabled ? '☑' : '☐';
 
         let parts = [];
         if (this.alias !== undefined && this.alias.length > 0) {
@@ -953,26 +953,26 @@ export class Clip extends BaseEventListener implements HasNotifier {
         if (this.tags.length > 0) {
             parts.push(this.tags.values().join(","));
         }
-        var prefix = "";
-        for (var i = 0; i < chckBox.length; i++) {
+        let prefix = "";
+        for (let i = 0; i < chckBox.length; i++) {
             prefix += " ";
         }
-        var partsStr = parts.join(prefix + "\n");
-        var str = chckBox + partsStr;
+        let partsStr = parts.join(prefix + "\n");
+        let str = chckBox + partsStr;
         return str;
     }
 
 }
 /*
 function createLoops(loopJsonArr) {
-    var loopArr = [];
+    let loopArr = [];
     if (loopJsonArr != undefined) {
         if (!Array.isArray(loopJsonArr)) {
             return createLoops([loopJsonArr]);
         }
-        for (var i = 0; i < loopJsonArr.length; i++) {
-            var loopJson = loopJsonArr[i];
-            var loopObj = new LoopObj(loopJson);
+        for (let i = 0; i < loopJsonArr.length; i++) {
+            let loopJson = loopJsonArr[i];
+            let loopObj = new LoopObj(loopJson);
             loopArr.push(loopObj);
         }
     }

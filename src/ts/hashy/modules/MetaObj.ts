@@ -29,7 +29,7 @@ export class MetaObj extends BaseEventListener{
         this._duration = duration !== undefined ? duration : getDurationMillis();
         this._jsonMtime = -1;
         this._modified = false;
-        var me = this;
+        let me = this;
         this.prependHandler(function (evt) { 
             dump(evt); 
             me.modified=true;
@@ -58,20 +58,20 @@ export class MetaObj extends BaseEventListener{
         }
     }
     private _loadOrCreateJson(): this {
-        var metaFilePath = this.metaObjFilePath;
+        let metaFilePath = this.metaObjFilePath;
         print("_loadOrCreateJson","metaFilePath",metaFilePath);
         dump(new Error("test").stack);
         print("_loadOrCreateJson","this.toJSON",this.toJSON());
         if (metaFilePath !== null) {
-            var json = JSON.parse(openOrCreateIfNotExists(metaFilePath, JSON.stringify(this.toJSON())));
+            let json = JSON.parse(openOrCreateIfNotExists(metaFilePath, JSON.stringify(this.toJSON())));
             this._jsonMtime = lastModifiedTimeMillis(metaFilePath);
             this.setFromJSON(json);
         }
         return this;
     }
     public setFromJSON(json: any): this {
-        var alreadyInit = this.initialized;
-        var backUp = undefined;
+        let alreadyInit = this.initialized;
+        let backUp = undefined;
         if (alreadyInit) {
             if (this._clips !== undefined) {
                 this._clips.removeObserver(this);
@@ -103,26 +103,26 @@ export class MetaObj extends BaseEventListener{
 
     get copyOfClips(): Clips {
         this._modified = false;
-        var cF = this.clips.copyOfInnerMostClips();
+        let cF = this.clips.copyOfInnerMostClips();
         return cF;
     }
 
     private get metaObjFilePath(): string | null {
-        var hash = this.hash;
-        var fp = null;
+        let hash = this.hash;
+        let fp = null;
         if (hash !== undefined) {
             fp = getMetaObjFilePath(hash);
         }
         return fp;
     }
     private durationEntryPath(metaFilePath?: string): string | null {
-        var resolvedMetaPath = null;
+        let resolvedMetaPath = null;
         if (metaFilePath === undefined) {
             resolvedMetaPath = this.metaObjFilePath;
         } else {
             resolvedMetaPath = metaFilePath;
         }
-        var reso = null;
+        let reso = null;
         if (metaFilePath != null && file_exists(metaFilePath)) {
             reso = getDurationEntryPath(this.duration, metaFilePath);
         }
@@ -130,12 +130,12 @@ export class MetaObj extends BaseEventListener{
 
     }
     private createDurationEntryIfNotExists(metaFilePath?: string) {
-        var mPath: (string | undefined | null) = metaFilePath;
+        let mPath: (string | undefined | null) = metaFilePath;
         if (mPath === undefined) {
             mPath = this.metaObjFilePath;
         }
         if (mPath != null) {
-            var durEntPath = this.durationEntryPath(mPath);
+            let durEntPath = this.durationEntryPath(mPath);
             if (durEntPath != null) {
                 if (!file_exists(durEntPath)) {
                     createDurationEntry(durEntPath, mPath);
@@ -148,9 +148,9 @@ export class MetaObj extends BaseEventListener{
         if (this._jsonMtime < 0) {
             return true;
         }
-        var metaPath: string | null = this.metaObjFilePath;
+        let metaPath: string | null = this.metaObjFilePath;
         if (metaPath) {
-            var currentFileMtime = lastModifiedTimeMillis(metaPath);
+            let currentFileMtime = lastModifiedTimeMillis(metaPath);
             return currentFileMtime - this._jsonMtime > updateIfOlderThanMillis;
         }
         return true;
@@ -188,9 +188,9 @@ export class MetaObj extends BaseEventListener{
 
     public save(displayOutput:(msg:string)=>void=()=>{}): MetaObj {
         this.initialize();
-        var hash = this.hash;
+        let hash = this.hash;
         if (hash) {
-            var path = this.metaObjFilePath;
+            let path = this.metaObjFilePath;
             if (path !== null) {
                 displayOutput(`saving loops to ${this.metaObjFilePath}`);
                 writeFile(path, this);
@@ -240,41 +240,41 @@ export class MetaObj extends BaseEventListener{
 
     public addClipWithStart(pos?: number | string, ...tags: string[]): Clip {
         pos = getOrDefaultPosition(pos, ...tags);
-        var innerClip = this.getClipAtPos(pos);
-        var end = 100.0;
+        let innerClip = this.getClipAtPos(pos);
+        let end = 100.0;
         if (innerClip === null) {
-            var sibling = this.clips.getClipAfter(pos);
+            let sibling = this.clips.getClipAfter(pos);
             if (sibling != null) {
                 end = sibling.start;
             }
         } else {
             end = innerClip.end;
         }
-        var createdClip = this.clips.add(pos, end, ...tags);
+        let createdClip = this.clips.add(pos, end, ...tags);
         this._modified = true;
         return createdClip;
     }
 
     public addClipWithEnd(pos?: number | string, ...tags: string[]): Clip {
         pos = getOrDefaultPosition(pos, ...tags);
-        var innerClip = this.getClipAtPos(pos);
-        var start = 0.0;
+        let innerClip = this.getClipAtPos(pos);
+        let start = 0.0;
         if (innerClip === null) {
-            var sibling = this.clips.getClipBefore(pos);
+            let sibling = this.clips.getClipBefore(pos);
             if (sibling != null) {
                 start = sibling.end;
             }
         } else {
             start = innerClip.start;
         }
-        var createdClip = this.clips.add(start, pos, ...tags);
+        let createdClip = this.clips.add(start, pos, ...tags);
         this._modified = true;
         return createdClip;
     }
     //TODO: should probably do a check to see if the clip where the position is being set can still be contained by its (potential) parent clip, and if not recursively bubble the command up to the containing parent
     public setClipAtPosStart(pos?: number): boolean {
         pos = getOrDefaultPosition(pos);
-        var innerClip = this.getClipAtPos(pos);
+        let innerClip = this.getClipAtPos(pos);
         if (innerClip !== null) {
             innerClip.start = pos;
             this._modified = true;
@@ -294,7 +294,7 @@ export class MetaObj extends BaseEventListener{
     //TODO: see #setClipAtPosStart todo note
     public setClipAtPosEnd(pos?: number): boolean {
         pos = getOrDefaultPosition(pos);
-        var innerClip = this.getClipAtPos(pos);
+        let innerClip = this.getClipAtPos(pos);
         if (innerClip !== null) {
             innerClip.start = pos;
             this._modified = true;
@@ -319,7 +319,7 @@ export class MetaObj extends BaseEventListener{
 }
 
 function getOrDefaultPosition(pos: (number | undefined | string | null), ...tags: string[]): number {
-    var def = 50.0;
+    let def = 50.0;
     if ((typeof pos !== "number")) {
         if (pos !== undefined && pos !== null) {
             tags.unshift((pos).toString());

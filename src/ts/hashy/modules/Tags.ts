@@ -15,7 +15,7 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
 
         }
         if (tags === undefined || typeof tags === "boolean") {
-            var tgs = more.shift();
+            let tgs = more.shift();
             if (tgs !== undefined) {
                 tags = tgs;
             }
@@ -61,13 +61,13 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
      * @returns 
      */
     private _add(tag: string | string[] | Tags, ...tags: (string | string[] | Tags)[]): string[] {
-        var allAdded: string[] = [];
-        var reso = this._doAddSingle(tag);
+        let allAdded: string[] = [];
+        let reso = this._doAddSingle(tag);
         if (reso.length > 0) {
             allAdded = allAdded.concat(reso);
         }
-        for (var i = 0; i < tags.length; i++) {
-            var t = tags[i];
+        for (let i = 0; i < tags.length; i++) {
+            let t = tags[i];
             reso = this._doAddSingle(t);
             if (reso.length > 0) {
                 allAdded = allAdded.concat(reso);
@@ -80,14 +80,14 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
     }
 
     private _doAddSingle(tag: string | string[] | Tags): string[] {
-        var reso: string[] = [];
+        let reso: string[] = [];
         if (tag instanceof Tags) {
             tag = tag._tags;
         }
         if (Array.isArray(tag)) {
-            for (var i = 0; i < tag.length; i++) {
-                var t = tag[i];
-                var added = this._doAddSingle(t);
+            for (let i = 0; i < tag.length; i++) {
+                let t = tag[i];
+                let added = this._doAddSingle(t);
                 if (typeof added === "string") {
                     reso.push(added);
                 } else if (Array.isArray(added) && added.length > 0) {
@@ -106,7 +106,7 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
                 }
             } else {
                 if (tag.length > 1) {
-                    var added = this._doAddSingle(tag);
+                    let added = this._doAddSingle(tag);
                     if (typeof added === "string") {
                         reso.push(added);
                     } else if (Array.isArray(added) && added.length > 0) {
@@ -119,7 +119,7 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
     }
 
     public replace(tagOrTagIndex: string | number, value: string | null | undefined): boolean {
-        var replacedString = this._replace(tagOrTagIndex, value);
+        let replacedString = this._replace(tagOrTagIndex, value);
         if (replacedString !== undefined) {
             //this.addToUndo(new UndoItem(this, this.replace, (ti: string, v: string) => { this._replace(v, ti) }, tagOrTagIndex, value));
             return true;
@@ -128,7 +128,7 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
 
     }
     private _replace(tagOrTagIndex: string | number, value: string | null | undefined): string | undefined {
-        var reso;
+        let reso;
         if (value == null || value == undefined) {
             value = "";
         }
@@ -141,13 +141,13 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
         }
         value = value.trim().toLowerCase();
         if (value.length == 0) {
-            var removed = this.remove(tagOrTagIndex);
+            let removed = this.remove(tagOrTagIndex);
             return;//returning undefined since this deffers to a differet undoable function
         } else {
             if (value === tagOrTagIndex) {
                 return;
             }
-            var removed = this._remove(tagOrTagIndex);
+            let removed = this._remove(tagOrTagIndex);
             if (removed.length > 0) {
                 reso = removed[0];
                 this._add(value);
@@ -157,8 +157,8 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
     }
 
     public remove(tagOrTagIndex: string | number, ...others: (string | number)[]): string[] {
-        var removed = this._remove(tagOrTagIndex, ...others);
-        if (removed) {
+        let removed = this._remove(tagOrTagIndex, ...others);
+        if (removed.length>0) {
             this._setModified("remove", removed.splice(0, 1), removed);
             //this.addToUndo(new UndoItem(this, this.remove, this._add, removed));
         }
@@ -185,12 +185,12 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
     }
 
     private _remove(tagOrTagIndex: string | number, ...others: (string | number)[]): string[] {
-        var reso = [];
+        let reso = [];
         if (typeof tagOrTagIndex == "string") {
             tagOrTagIndex = tagOrTagIndex.trim();
             tagOrTagIndex = tagOrTagIndex.toLowerCase();
             if (tagOrTagIndex.length > 0) {
-                var index = this.values().indexOf(tagOrTagIndex);
+                let index = this.values().indexOf(tagOrTagIndex);
                 tagOrTagIndex = index;
             }
         }
@@ -201,8 +201,8 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
             }
         }
         if (others.length >= 0) {
-            for (var i = 0; i < others.length; i++) {
-                var other = others[i];
+            for (let i = 0; i < others.length; i++) {
+                let other = others[i];
                 reso.concat(this._remove(other));
             }
         }
@@ -212,12 +212,12 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
 
 
     public set(...tags: (Tags | string | string[])[]): Record<string, string[]> & { adding: string[], removing: string[], added: string[], removed: string[] } {
-        var result: Record<string, string[]> & { adding: string[], removing: string[], added: string[], removed: string[] } = { adding: [], removing: [], added: [], removed: [] };
-        var toSetTo = processValuesStrings(...tags);
-        var currentValues = this.values();
+        let result: Record<string, string[]> & { adding: string[], removing: string[], added: string[], removed: string[] } = { adding: [], removing: [], added: [], removed: [] };
+        let toSetTo = processValuesStrings(...tags);
+        let currentValues = this.values();
         //first remove values that will remain from the set of a tags to add/remove
-        var ignored = toSetTo.filter((el: string) => {
-            var ignore = currentValues.indexOf(el) !== -1;
+        let ignored = toSetTo.filter((el: string) => {
+            let ignore = currentValues.indexOf(el) !== -1;
             if (!ignore) {
                 result.adding.push(el);
             }
@@ -235,9 +235,9 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
     }
 
     public addAll(...tags: (Tags | string | string[])[]): string[] {
-        var tag: (Tags | string | string[]) = [];
+        let tag: (Tags | string | string[]) = [];
         if (tags.length > 0) {
-            var _tag = tags.shift();
+            let _tag = tags.shift();
             while (_tag === undefined && tags.length > 0) {
                 _tag = tags.shift();
             }
@@ -253,7 +253,7 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
         if (tag instanceof Tags) {
             tag = tag._tags;
         }
-        var added = this._add(tag, ...tags);
+        let added = this._add(tag, ...tags);
         if (added.length > 0) {
             if (this._initialized) {
                 this._setModified("add", added);
@@ -267,7 +267,7 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
         return this;
     }
     public copy(mute: boolean = this.muted) {
-        var cpy = mute ? new Tags(mute, this.values().slice(0)) : new Tags(this.values().slice(0));
+        let cpy = mute ? new Tags(mute, this.values().slice(0)) : new Tags(this.values().slice(0));
         return cpy;
     }
     public test(predicate: (arrPredicate: string[]) => boolean = (function (p) { return true; })): boolean {
@@ -281,10 +281,10 @@ export class Tags extends BaseEventListener implements HasNotifier {//extends Ab
             displayText = "tags";
         }
         if (mp.input !== undefined && mp.input.get !== undefined) {
-            var valsAsArr = this.toJSON();
+            let valsAsArr = this.toJSON();
             valsAsArr = processValuesString(this.alwaysPromptWithDefaultTags ? valsAsArr.concat(additionalDefaultTags) : valsAsArr);
-            var valsAsStr = valsAsArr.join(",");
-            var self = this;
+            let valsAsStr = valsAsArr.join(",");
+            let self = this;
             mp.input.get({
                 prompt: displayText,
                 default_text: valsAsStr,
@@ -315,8 +315,8 @@ function addUniqueOnly(more: string | string[] = [], existing: string[] = []): s
             more = [more];
         }
     }
-    for (var i = 0; i < more.length; i++) {
-        var sTag = more[i];
+    for (let i = 0; i < more.length; i++) {
+        let sTag = more[i];
         if (Array.isArray(sTag)) {
             existing = addUniqueOnly(sTag, existing);
         }
@@ -327,7 +327,7 @@ function addUniqueOnly(more: string | string[] = [], existing: string[] = []): s
     return existing;
 }
 export function processValuesStrings(...tags: (Tags | string | string[])[]): string[] {
-    var result: string[] = [];
+    let result: string[] = [];
     tags.forEach(el => processValuesString(el, result));
     return result;
 
@@ -340,18 +340,18 @@ export function processValuesString(tag: Tags | string | string[], uniques?: str
         if (uniques === undefined) {
             uniques = [];
         }
-        for (var i = 0; i < tag.length; i++) {
-            var t = tag[i];
+        for (let i = 0; i < tag.length; i++) {
+            let t = tag[i];
             uniques = addUniqueOnly(uniques, processValuesString(t));
         }
         return uniques;
     } else {
         tag = tag.trim();
-        var tagSplitUp = tag.split(/\s*[^0-9a-z_ \-]+\s*/i);
+        let tagSplitUp = tag.split(new RegExp("\\s*[^0-9a-z_ \\-]+\\s*","i"));
         tagSplitUp = tagSplitUp.map(function (t) {
             if (t !== null) {
                 t = t.toLowerCase();
-                t = t.replace(/[\s_\-]+/, " ");
+                t = t.replace(new RegExp("\\s_\\-]+"), " ");
                 t = t.trim();
             }
             return t;

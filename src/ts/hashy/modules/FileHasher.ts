@@ -1,13 +1,13 @@
 import { file_exists } from "./IOUtils";
-export const sha256_blake_hash_regex=/^[0-9a-fA-F]{64}$/;
+export const sha256_blake_hash_regex=new RegExp("^[0-9a-fA-F]{64}$");
 
 //note each hashing function that calls command_native should not be directly exposed, it'd be a shame of somehow command line injection occured
 //instead an exported wrapper function that first calls ioUtils.file_exists should be called
 
 function sha256sumWin(filePath:string) {
-	var hsh = "";
+	let hsh = "";
 	print(filePath);
-	var reso = mp.command_native({
+	let reso = mp.command_native({
 		"name": "subprocess",
 		"playback_only": false,
 		"capture_stdout": true,
@@ -19,8 +19,8 @@ function sha256sumWin(filePath:string) {
 		hsh = "";
 	} else {
 		hsh = reso.stdout.trim();
-		var lines = hsh.split(/[\r\n]+/).map(function(line){return line.trim();});
-		var matchedLine = lines.filter(function(line){return is256BitHexString(line);});
+		let lines = hsh.split(new RegExp("[\\r\\n]+")).map(function(line){return line.trim();});
+		let matchedLine = lines.filter(function(line){return is256BitHexString(line);});
 		if(matchedLine.length==1){
 			hsh=matchedLine[0].toLowerCase();
 		} else {
@@ -37,9 +37,9 @@ export function is256BitHexString(str:string){
 }
 
 function sha256sumLnx(filePath:string) {
-	var hsh = "";
+	let hsh = "";
 	print(filePath);
-	var reso = mp.command_native({
+	let reso = mp.command_native({
 		"name": "subprocess",
 		"playback_only": false,
 		"capture_stdout": true,
@@ -52,8 +52,8 @@ function sha256sumLnx(filePath:string) {
 		hsh = "";
 	} else {
 		hsh = reso.stdout.trim();
-		var parts = hsh.split(/[\s]+/);
-		var matchedPart = parts.filter(function(part){return is256BitHexString(part);});
+		let parts = hsh.split(new RegExp("[\\s]+"));
+		let matchedPart = parts.filter(function(part){return is256BitHexString(part);});
 		if(matchedPart.length>0){
 			hsh=matchedPart[0].toLowerCase();
 		} 
@@ -62,7 +62,7 @@ function sha256sumLnx(filePath:string) {
 }
 
 export function hashFile(filePath:string){
-	var hsh="";
+	let hsh="";
 	if(file_exists(filePath)){
 		//TODO:add some logic for linux vs windows
 		hsh=sha256sumLnx(filePath);
@@ -75,12 +75,12 @@ export function hashFile(filePath:string){
 //blake3 and sha256 both being 256 bits in length will either cause loop data file duplication and generally make
 //things a bit messy
 function blake3sum(filePath:string) {
-	var hsh = "";
+	let hsh = "";
 	print(filePath);
 	//var f=[];
 	//f.push(mp.get_property("working-directory"));
 	//f.push(mp.get_property("path"));
-	var reso = mp.command_native({
+	let reso = mp.command_native({
 		"name": "subprocess",
 		"playback_only": false,
 		"capture_stdout": true,

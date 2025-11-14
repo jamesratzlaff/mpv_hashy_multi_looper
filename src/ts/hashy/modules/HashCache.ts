@@ -5,13 +5,13 @@ import { file_exists, deleteFileAndCleanUpEmptiness, deleteFile, writeFile } fro
 import { mpUtils } from "./MpUtils";
 import { ReturnsNumberFunction, resolveNumber } from "./Range";
 
-var cacheFileExt = ".json";
-var data_hash_cache_dir_name = "hash_cache";
-var hash_cache_dir: string | null = null;
+let cacheFileExt = ".json";
+let data_hash_cache_dir_name = "hash_cache";
+let hash_cache_dir: string | null = null;
 
 export function getHashCacheDir() {
     if (hash_cache_dir == null) {
-        var parent_dir = getDataDir();
+        let parent_dir = getDataDir();
         hash_cache_dir = mp.utils.join_path(parent_dir, data_hash_cache_dir_name);
     }
     return hash_cache_dir;
@@ -27,7 +27,7 @@ function getHashCacheFilePath(filePath: string) {
 }
 
 function getFilePathAssociatedToHashCacheFilePath(hashCachePath: string) {
-    var stripped = hashCachePath.substring(getHashCacheDir().length, hashCachePath.length - cacheFileExt.length);
+    let stripped = hashCachePath.substring(getHashCacheDir().length, hashCachePath.length - cacheFileExt.length);
     if (stripped.charAt(0) != '/') {
         stripped = '/' + stripped;
     }
@@ -49,14 +49,14 @@ class HashCacheData {
         function getJson(hashCacheFilePath: string) {
             if (hashCacheFilePath != undefined) {
                 if (file_exists(hashCacheFilePath)) {
-                    var jsonStr = mp.utils.read_file(hashCacheFilePath);
+                    let jsonStr = mp.utils.read_file(hashCacheFilePath);
                     if (jsonStr != undefined) {
                         return JSON.parse(jsonStr);
                     }
                 }
             }
         }
-        var json = getJson(hashCacheFilePath);
+        let json = getJson(hashCacheFilePath);
         this._setFromJson(json);
     }
 
@@ -76,7 +76,7 @@ class HashCacheData {
     }
 
     public associatedFileExists() {
-        var assocFilePath = this.getAssociatedFilePath();
+        let assocFilePath = this.getAssociatedFilePath();
         if (assocFilePath != undefined) {
             return file_exists(assocFilePath);
         }
@@ -142,7 +142,7 @@ class HashChangeIndicator {
     private _mtime: number = -1;
     constructor(size?: number | HasSizeAndModifiedTime | mp.FileInfo, mtime?: number) {
         if (typeof size == "object") {
-            if (size.mtime && size.size) {
+            if (size.mtime!==undefined&&size.mtime!==null && size.size!==undefined&&size.mtime!==null) {
                 mtime = resolveNumber(size.mtime);
                 size = resolveNumber(size.size);
             }
@@ -214,7 +214,7 @@ export class HashCache {
         if (this._hashCacheIsValid) {
             return;
         }
-        var deleteHashCache = false;
+        let deleteHashCache = false;
         if (this._hashCacheData != undefined) {
             if (this._hashCacheData.hash() == undefined) {
                 this._hashCacheData = undefined;
@@ -242,9 +242,9 @@ export class HashCache {
         if (this._hashCacheData == undefined) {
             print("creating hash for "+this._ogFilePath);
             this._hashCacheData = new HashCacheData(getHashCacheFilePath(this._ogFilePath));
-            var paused=mpUtils.paused;
+            let paused=mpUtils.paused;
             mpUtils.pause(true);
-            var calcHash = hashFile(this._ogFilePath);
+            let calcHash = hashFile(this._ogFilePath);
             mpUtils.pause(paused);
             print("done creating hash for "+this._ogFilePath);
             this._hashCacheData.hash(calcHash);

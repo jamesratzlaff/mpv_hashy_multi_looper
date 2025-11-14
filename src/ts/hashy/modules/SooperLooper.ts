@@ -109,7 +109,7 @@ export class SooperLooper extends BaseEventListener {
             this._filteredClips = undefined;
         }
         print("checking if last file loaded is same ", "current file", this._lastFileLoaded, "fp", fp, "changed", changed);
-        var doEnableCheck = this._lastFileLoaded === undefined;
+        let doEnableCheck = this._lastFileLoaded === undefined;
         this._lastFileLoaded = fp;
         if (doEnableCheck) {
             this.loops_enabled = this._loops_enabled;
@@ -233,27 +233,27 @@ export class SooperLooper extends BaseEventListener {
 
         let paused = mpUtils.paused;
         if (paused) {
-            var seeking = mp.get_property_bool("seek", false);
+            let seeking = mp.get_property_bool("seek", false);
             if (seeking) {
                 print("video is seeking");
             }
             print("video is paused, not checking for time change");
             return;
         }
-        var val = value !== undefined ? value * 1000 : undefined;
+        let val = value !== undefined ? value * 1000 : undefined;
         if (val !== undefined) {
             val = (val / this.durationMillis) * 100;
         }
 
-        var clips = this.filteredClips;
+        let clips = this.filteredClips;
 
         if (clips.length > 0 && val !== undefined && val < 100) {
-            var changeClip = false;
+            let changeClip = false;
             if (!this._filePlayed) {
                 this._filePlayed = true;
             }
             if (val !== undefined) {
-                var isValidPos = false;
+                let isValidPos = false;
                 if (this.currentClip !== undefined) {
                     if (!this.currentClip.contains(val)) {
                         this.currentClip = undefined;
@@ -268,7 +268,7 @@ export class SooperLooper extends BaseEventListener {
                     if (this.currentClip === undefined) {
                         if (clips.length > 0) {
                             if (clips.clips[clips.length - 1].end > val) {
-                                var nxtClip = clips.getNextClosestClip(val);
+                                let nxtClip = clips.getNextClosestClip(val);
                                 this.currentClip = nxtClip;
                             }
                         }

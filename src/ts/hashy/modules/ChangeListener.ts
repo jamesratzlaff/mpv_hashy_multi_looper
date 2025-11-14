@@ -9,7 +9,7 @@ export class ChangeEvent implements IChangeEvent {
     readonly source: any;
     readonly valuesOrArgs?: any[];
     constructor(eventNameOrSource: string | any | Function, source?: any | any, ...values: any[]) {
-        var name: string | Function | undefined = undefined;
+        let name: string | Function | undefined = undefined;
         // print("eventNameOrSource", eventNameOrSource, "source", source, "values", values);
         if (typeof eventNameOrSource !== "string") {
             // if (eventNameOrSource instanceof AbstractChangeNotifier) {
@@ -84,7 +84,7 @@ class MuteAndQueueOptions<V> implements IMuteAndQueueOptions<V> {
         this.sink = sink;
     }
     get isInDefaultState(): boolean {
-        var inDefState =
+        let inDefState =
 
             this.muted === DEFAULT_MUTED &&
             this.queuing === DEFAULT_QUEUING &&
@@ -153,7 +153,7 @@ class MuteAndQueueOptions<V> implements IMuteAndQueueOptions<V> {
         if (this._queue !== undefined) {
             this._drainingQueue = true;
             while (this._queue.length > 0) {
-                var evt = this._queue.shift();
+                let evt = this._queue.shift();
                 this.dispatch(evt);
             }
             this._drainingQueue = false;

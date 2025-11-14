@@ -30,7 +30,7 @@ class MpUtils {
     }
 
     get durationMillis():number {
-        var dur = mp.get_property_number(DURATION_FULL,NaN);
+        let dur = mp.get_property_number(DURATION_FULL,NaN);
         if(isNaN(dur)){
             return dur;
         }
@@ -42,7 +42,7 @@ class MpUtils {
     }
 
     get timePosMillis():number{
-        var tp = mp.get_property_number(TIME_POS_FULL,NaN);
+        let tp = mp.get_property_number(TIME_POS_FULL,NaN);
         if(isNaN(tp)){
             return tp;
         }
@@ -64,11 +64,11 @@ class MpUtils {
 
     }
     setTimePosFromPercentOfDurationMillis(pct:number=this.percentPos,durationMillis=this.durationMillis){
-        var posMillis=this._posMillisFromPercentOfDurationMillis(pct,durationMillis);
+        let posMillis=this._posMillisFromPercentOfDurationMillis(pct,durationMillis);
         this.timePosMillis=posMillis;
     }
     setTimePosFromPercentOfDuration(pct:number=this.percentPos,duration:number=this.duration){
-        var pos = this._posFromPercentOfDuration(pct,duration);
+        let pos = this._posFromPercentOfDuration(pct,duration);
         this.timePos=pos;
     }
     set timePosMillis(posMillis:number){

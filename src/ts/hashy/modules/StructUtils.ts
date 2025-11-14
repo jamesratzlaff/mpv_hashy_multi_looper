@@ -6,7 +6,7 @@
  */
 export function argumentsToFlatArray(args:any, startIdx:number=0){
 	function isPrim(o:any){
-		var oType = typeof o;
+		let oType = typeof o;
 		return oType!="object" && oType!="function";
 	}
 
@@ -14,17 +14,17 @@ export function argumentsToFlatArray(args:any, startIdx:number=0){
 		startIdx=0;
 	}
 	if(isPrim(args)){
-		var tmpArgs=[];
+		let tmpArgs=[];
 		tmpArgs.push(args);
 		args=tmpArgs;
 	}
-	var result: any[]=[];
-	for(var i=startIdx;i<args.length;i++){
-		var arg = args[i];
+	let result: any[]=[];
+	for (let i=startIdx;i<args.length;i++){
+		let arg = args[i];
 		if(Array.isArray(arg)){
 			result=result.concat(argumentsToFlatArray(arg));
 		} else {
-			var container=[];
+			let container=[];
 			container.push(arg);
 			result=result.concat(container);
 		}

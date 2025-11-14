@@ -3,8 +3,8 @@ import { argumentsToFlatArray } from "./StructUtils";
 //
 export function writeFile(path: string, dataToWrite: any, append: boolean = false) {
 	function ensureDirectoryForFile(path: string) {
-		var pDir = mp.utils.split_path(path)[0];
-		var reso: unknown = true;
+		let pDir = mp.utils.split_path(path)[0];
+		let reso: unknown = true;
 		if (!file_exists(pDir)) {
 			reso = mp.command_native({
 				"name": "subprocess",
@@ -19,7 +19,7 @@ export function writeFile(path: string, dataToWrite: any, append: boolean = fals
 	if (append == undefined || append == null) {
 		append = false;
 	}
-	var writeFunc: Function = append ? mp.utils.append_file : mp.utils.write_file;
+	let writeFunc: Function = append ? mp.utils.append_file : mp.utils.write_file;
 	if (dataToWrite == undefined || dataToWrite == null) {
 		dataToWrite = "";
 	}
@@ -38,8 +38,8 @@ export function openOrCreateIfNotExists(path: string, dataToWrite: any, maxBytes
 	if (maxBytes == undefined || maxBytes == null) {
 		maxBytes = -1;
 	}
-	var reso = null;
-	var exists = file_exists(path);
+	let reso = null;
+	let exists = file_exists(path);
 	if (!exists) {
 		writeFile(path, dataToWrite);
 	}
@@ -48,15 +48,15 @@ export function openOrCreateIfNotExists(path: string, dataToWrite: any, maxBytes
 }
 
 export function normalize_path_parts(path: string): string[] {
-	var pp = getPathParts(path);
-	var dot = pp.indexOf(".");
+	let pp = getPathParts(path);
+	let dot = pp.indexOf(".");
 	while (dot != -1) {
 		pp.splice(dot, 1);
 		dot = pp.indexOf(".");
 	}
 	let resolvedParts = [];
-	for (var i = 0; i < pp.length; i++) {
-		var part = pp[i];
+	for (let i = 0; i < pp.length; i++) {
+		let part = pp[i];
 		if (part !== ".." || resolvedParts.length === 0) {
 			resolvedParts.push(part);
 		} else {
@@ -75,16 +75,16 @@ export function normalize_path_parts(path: string): string[] {
 }
 
 export function relativize(base:string,toRelativize:string){
-	var nBase = normalize_path_parts(base);
-	var nToRelativize=normalize_path_parts(toRelativize);
+	let nBase = normalize_path_parts(base);
+	let nToRelativize=normalize_path_parts(toRelativize);
 	
-	var diff = getFirstDiffInArray(nBase,nToRelativize);
-	var numDots = nBase.length-diff;
-	var resoParts=[];
-	for(var i=0;i<numDots;i++){
+	let diff = getFirstDiffInArray(nBase,nToRelativize);
+	let numDots = nBase.length-diff;
+	let resoParts=[];
+	for(let i=0;i<numDots;i++){
 		resoParts.push("..");
 	}
-	for(var i=diff;i<nToRelativize.length;i++){
+	for(let i=diff;i<nToRelativize.length;i++){
 		resoParts.push(nToRelativize[i]);
 	}
 	return resoParts.join("/");
@@ -92,8 +92,8 @@ export function relativize(base:string,toRelativize:string){
 }
 
 function getFirstDiffInArray(arr1:string[],arr2:string[]){
-	var endIdx=Math.min(arr1.length,arr2.length);
-	for(var i=0;i<endIdx;i++){
+	let endIdx=Math.min(arr1.length,arr2.length);
+	for(let i=0;i<endIdx;i++){
 		if(arr1[i]!==arr2[i]){
 			return i;
 		}
@@ -102,7 +102,7 @@ function getFirstDiffInArray(arr1:string[],arr2:string[]){
 }
 
 function getPathParts(path: string): string[] {
-	var splitPath = path.split(/[/]+/);
+	let splitPath = path.split(new RegExp("[/]+"));
 	if (splitPath[0].charAt(0) === '/') {
 		splitPath[0] = splitPath[0].substring(1, splitPath[0].length);
 		splitPath = [""].concat(splitPath);
@@ -127,7 +127,7 @@ export function getRmDirNodes(path: string, exclusiveParent: string) {
 		//print("pth: "+pth);
 		return pth;
 	}
-	var result = [];
+	let result = [];
 	if (exclusiveParent.charAt(exclusiveParent.length - 1) != '/') {
 		exclusiveParent += "/";
 	}
@@ -146,22 +146,22 @@ export function getRmDirNodes(path: string, exclusiveParent: string) {
 }
 
 export function pathIsDir(path: string) {
-	var fileInfo = mp.utils.file_info(path);
+	let fileInfo = mp.utils.file_info(path);
 	if (fileInfo != undefined) {
 		return fileInfo.is_dir;
 	}
 }
 export function pathIsFile(path: string) {
-	var fileInfo = mp.utils.file_info(path);
+	let fileInfo = mp.utils.file_info(path);
 	if (fileInfo != undefined) {
 		return fileInfo.is_file;
 	}
 }
 export function dirIsEmpty(dirPath: string) {
-	var fileInfo = mp.utils.file_info(dirPath);
+	let fileInfo = mp.utils.file_info(dirPath);
 	if (fileInfo != undefined) {
 		if (fileInfo.is_dir) {
-			var dirRes = mp.utils.readdir(dirPath);
+			let dirRes = mp.utils.readdir(dirPath);
 			if (dirRes !== undefined) {
 				return dirRes.length == 0;
 			}
@@ -175,22 +175,22 @@ export function deleteFileAndCleanUpEmptiness(filePath: string, exclParentPath: 
 	}
 	if (filePath != exclParentPath) {
 		deleteFile(filePath);
-		var parentPath = mp.utils.split_path(filePath)[0];
+		let parentPath = mp.utils.split_path(filePath)[0];
 		if (dirIsEmpty(parentPath)) {
-			var dirsToRemove = getRmDirNodes(parentPath, exclParentPath);
+			let dirsToRemove = getRmDirNodes(parentPath, exclParentPath);
 			deleteDir(dirsToRemove);
 		}
 	}
 }
 export function lastModifiedTimeMillis(filePath:string):number{
-	var fileInfo = mp.utils.file_info(filePath);
+	let fileInfo = mp.utils.file_info(filePath);
 	if (fileInfo != undefined) {
 		return fileInfo.mtime*1000;
 	}
 	return -1;
 }
 export function deleteFile(filePath: string) {
-	var reso = mp.command_native({
+	let reso = mp.command_native({
 		"name": "subprocess",
 		"playback_only": false,
 		"capture_stdout": true,
@@ -205,8 +205,8 @@ export function createSymlink(actualFilePath:string, linkPath:string):any{
 		linkPath=linkPath.substring(0,linkPath.length-1);
 	}
 	function ensureDirectoryForFile(path: string) {
-		var pDir = mp.utils.split_path(path)[0];
-		var reso: unknown = true;
+		let pDir = mp.utils.split_path(path)[0];
+		let reso: unknown = true;
 		if (!file_exists(pDir)) {
 			reso = mp.command_native({
 				"name": "subprocess",
@@ -217,7 +217,7 @@ export function createSymlink(actualFilePath:string, linkPath:string):any{
 		}
 		return reso;
 	}
-	var lnReso = undefined;
+	let lnReso = undefined;
 	if(!file_exists(linkPath)){
 		ensureDirectoryForFile(linkPath);
 			lnReso = mp.command_native({
@@ -234,16 +234,16 @@ export function createSymlink(actualFilePath:string, linkPath:string):any{
 }
 
 export function deleteDir(dirPaths: string | string[]) {
-	var baseArgs = ["rmdir", "--ignore-fail-on-non-empty"];
-	var paths: string[] = [];
+	let baseArgs = ["rmdir", "--ignore-fail-on-non-empty"];
+	let paths: string[] = [];
 	paths = paths.concat(argumentsToFlatArray(dirPaths));
 	if (arguments.length > 1) {
 		paths = paths.concat(argumentsToFlatArray(arguments, 1));
 	}
-	var args = baseArgs.concat(paths);
+	let args = baseArgs.concat(paths);
 
 
-	var reso = mp.command_native({
+	let reso = mp.command_native({
 		"name": "subprocess",
 		"playback_only": false,
 		"capture_stdout": true,

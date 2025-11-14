@@ -223,7 +223,7 @@ export class SooperLooperController extends BaseEventListener implements ISooper
         print("applying config");
         this.applyConfig(this.configOptions);
         print("done creating sooplooper controller");
-        var self = this;
+        let self = this;
 
         this.prependHandler(function (evt) {
             if (evt.eventOrFunctionName === "fileChanged") {
@@ -234,7 +234,7 @@ export class SooperLooperController extends BaseEventListener implements ISooper
     }
     editTagFilter(): void {
         if (mp.input !== undefined && mp.input.get !== undefined) {
-            var self = this;
+            let self = this;
             mp.input.get({
                 prompt: "tag filter",
                 default_text: this.tagFilter,
@@ -258,7 +258,7 @@ export class SooperLooperController extends BaseEventListener implements ISooper
         }
         if (this._tagFilter !== filter) {
             this._tagFilter = filter;
-            var asPredicate = SooperLooperController._convertTagFilterToPredicate(this._tagFilter);
+            let asPredicate = SooperLooperController._convertTagFilterToPredicate(this._tagFilter);
             this.sooperLooper.tagFilter = asPredicate;
             this.notifyWithThis("tagFilter", filter);
         }
@@ -266,9 +266,9 @@ export class SooperLooperController extends BaseEventListener implements ISooper
     private static _convertTagFilterToPredicate(filter: string): ((tags: Tags) => boolean) {
         let parts = processValuesString(filter);
         if (parts.length > 0) {
-            var result = (tags: Tags) => {
-                var truth = true;
-                for (var i = 0; truth && i < parts.length; i++) {
+            let result = (tags: Tags) => {
+                let truth = true;
+                for (let i = 0; truth && i < parts.length; i++) {
                     let part=parts[i];
                     truth=tags.values().indexOf(part)!==-1;
                     print("part",part,"values",tags.values().join(","),"index",tags.values().indexOf(part));
@@ -351,14 +351,14 @@ export class SooperLooperController extends BaseEventListener implements ISooper
 
 
     getTimePos(val: number) {
-        var posMillis = this.getTimePosMillis(val);
-        var posSec = this.getTimePosMillis(posMillis) / 1000;
+        let posMillis = this.getTimePosMillis(val);
+        let posSec = this.getTimePosMillis(posMillis) / 1000;
         return posSec;
     }
     getTimePosMillis(val: number): number {
-        var asFracPct = (val / 100);
-        var durationMillis = this.sooperLooper.metaObj.duration;
-        var scaledDurationMillis = asFracPct * durationMillis;
+        let asFracPct = (val / 100);
+        let durationMillis = this.sooperLooper.metaObj.duration;
+        let scaledDurationMillis = asFracPct * durationMillis;
         return scaledDurationMillis;
 
     }
@@ -385,7 +385,7 @@ export class SooperLooperController extends BaseEventListener implements ISooper
     }
     get selectedClip(): Clip | undefined {
         if (this._selectedClip === undefined) {
-            var foundClip = this.metaObj.getClipAtPos(mpUtils.percentPos);
+            let foundClip = this.metaObj.getClipAtPos(mpUtils.percentPos);
             if (foundClip !== null) {
                 this._selectedClip = foundClip;
             }
@@ -393,9 +393,9 @@ export class SooperLooperController extends BaseEventListener implements ISooper
         return this._selectedClip;
     }
     set selectedClip(clip: Clip | number | undefined | null) {
-        var c = clip;
+        let c = clip;
         if (typeof c === "number") {
-            var locdClip: Clip | undefined | null = this.sooperLooper.metaObj.getClipAtPos(c);
+            let locdClip: Clip | undefined | null = this.sooperLooper.metaObj.getClipAtPos(c);
             if (locdClip === null) {
                 locdClip = undefined;
             }
@@ -425,7 +425,7 @@ export class SooperLooperController extends BaseEventListener implements ISooper
     }
 
     addClipStart(): Clip {
-        var clip = undefined;
+        let clip = undefined;
 
         let start = mpUtils.percentPos;
         let end = this.metaObj.clips.getNextClipBoundary(start);
@@ -437,7 +437,7 @@ export class SooperLooperController extends BaseEventListener implements ISooper
         return clip;
     }
     addClipEnd(): Clip {
-        var clip = undefined;
+        let clip = undefined;
         let start = mpUtils.percentPos;
         let end = this.metaObj.clips.getPrevClipBoundary(start);
         clip = this.metaObj.clips.addClip(new Clip(start, end));
@@ -460,13 +460,13 @@ export class SooperLooperController extends BaseEventListener implements ISooper
         return this.selectedClip;
     }
     selectedClipGoToEnd() {
-        var selectedClip = this.selectedClip;
+        let selectedClip = this.selectedClip;
         if (selectedClip !== undefined) {
             this.seekToClip(this.selectedClip, false);
         }
     }
     selectedClipGoToStart() {
-        var selectedClip = this.selectedClip;
+        let selectedClip = this.selectedClip;
         if (selectedClip !== undefined) {
             this.seekToClip(this.selectedClip);
         }
@@ -506,7 +506,7 @@ export class SooperLooperController extends BaseEventListener implements ISooper
     editTags(clip: Clip | undefined = this.selectedClip) {
 
         if (clip === undefined) {
-            var foundClip = this.metaObj.getClipAtPos(mpUtils.percentPos);
+            let foundClip = this.metaObj.getClipAtPos(mpUtils.percentPos);
             if (foundClip !== null) {
                 clip = foundClip;
             }
@@ -526,7 +526,7 @@ export class SooperLooperController extends BaseEventListener implements ISooper
                 key = "";
             }
             key = key.trim();
-            let splitUp = key.split(/[\s]+/);
+            let splitUp = key.split(new RegExp("[\\s]+"));
             // dump("bindKey","splitUp",splitUp);
             key = splitUp[0];
             if (splitUp.length > 1) {
@@ -534,7 +534,7 @@ export class SooperLooperController extends BaseEventListener implements ISooper
                 //dump("bindKey","joined",joined);
                 flags = JSON.parse(joined);
             }
-            var self = this;
+            let self = this;
             if (key.length === 0) {
                 mp.remove_key_binding(identifier);
             } else {

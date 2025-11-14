@@ -141,7 +141,7 @@ const PARAM_REMAPPER = function (inSortedCollection: any[], comparator?: (((a: a
 export function comparatorBinarySearch(toSearchFor: any, inSortedCollection: any[], comparator: ((a: any, b: any) => number)): number;
 export function comparatorBinarySearch(toSearchFor: any, inSortedCollection: any[] = [], comparator: (((a: any, b: any) => number) | number) = DEFAULT_OBJ_COMPARATOR, lowerBound: number = 0, upperBound: number = inSortedCollection.length): number {
     if (typeof comparator === "number") {
-        var remapped = PARAM_REMAPPER(inSortedCollection, comparator, lowerBound, upperBound);
+        let remapped = PARAM_REMAPPER(inSortedCollection, comparator, lowerBound, upperBound);
         comparator = remapped.comparator;
         lowerBound = remapped.lowerBound;
         upperBound = remapped.upperBound;
@@ -188,7 +188,7 @@ export function binarySearchWithComparator(toSearchFor: any, inSortedCollection:
             upperBound = mid - 1;
         }
     }
-    var val = -lowerBound;
+    let val = -lowerBound;
     if(val==0){
         val = -Infinity;
     }
@@ -200,7 +200,7 @@ class NumStats {
     readonly arrGetter: (() => number[]);
     constructor(getter: (() => number[]) = () => []) {
         if (getter instanceof AbsStopWatch) {
-            var timesArr = getter.times;
+            let timesArr = getter.times;
             getter = () => timesArr.map(time => time.length);
         }
         this.arrGetter = getter;
@@ -229,7 +229,7 @@ class NumStats {
         if (arr.length == 1) {
             return arr[0];
         }
-        var reduced = arr.reduce((a, b) => {
+        let reduced = arr.reduce((a, b) => {
             if (a < b) {
                 return a;
             }
@@ -246,7 +246,7 @@ class NumStats {
         if (arr.length == 1) {
             return arr[0];
         }
-        var reduced = arr.reduce((a, b) => {
+        let reduced = arr.reduce((a, b) => {
             if (a > b) {
                 return a;
             }
@@ -263,7 +263,7 @@ class NumStats {
         if (arr.length == 1) {
             return arr[0];
         }
-        var reduced = arr.reduce((a, b) => {
+        let reduced = arr.reduce((a, b) => {
 
             return a + b;
         });
@@ -355,8 +355,8 @@ class NumStats {
             this._times.push(new NumberRange(this._start, stopTime));
             this._start = -1;
         }
-        for (var subwatchName in this._subWatches) {
-            var subwatch = this._subWatches[subwatchName];
+        for (let subwatchName in this._subWatches) {
+            let subwatch = this._subWatches[subwatchName];
             if (subwatch !== undefined) {
                 subwatch._stop(stopTime);
             }
@@ -434,12 +434,12 @@ class NumStats {
     */
 /**
 export function doTest(numOfruns: number = 100, arrSize: number = 1000) {
-    var sw = new StopWatch();
+    let sw = new StopWatch();
     sw.start();
-    for (var i = 0; i < numOfruns; i++) {
+    for (let i = 0; i < numOfruns; i++) {
         let arr = NumberRange.createRandomNumberRanges(arrSize);
-        var nSortArr = arr.slice(0);
-        var qSortArr = arr.slice(0);
+        let nSortArr = arr.slice(0);
+        let qSortArr = arr.slice(0);
         sw.start("quick-sort");
         quickSort(qSortArr,0,qSortArr.length-1);
         sw.stop();

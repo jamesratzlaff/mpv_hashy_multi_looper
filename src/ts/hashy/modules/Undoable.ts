@@ -37,8 +37,8 @@ class UndoStack {
         if(this._done.length==0){
             return false;
         }
-        var itemToUndo = this._done.pop();
-        var undid = false;
+        let itemToUndo = this._done.pop();
+        let undid = false;
         if(itemToUndo!==undefined){
             itemToUndo.undo();
             undid=true;
@@ -51,8 +51,8 @@ class UndoStack {
         if(this._undone.length==0){
             return false;
         }
-        var itemToRedo = this._undone.pop();
-        var redone=false;
+        let itemToRedo = this._undone.pop();
+        let redone=false;
         if(itemToRedo!==undefined){
             itemToRedo.redo();
             redone=true;

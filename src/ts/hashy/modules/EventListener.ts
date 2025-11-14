@@ -18,7 +18,7 @@ export interface FullOpHasEventNotifier extends HasNotifier, FullOpEventNotifier
 }
 export class EventNotifier implements FullOpEventNotifier {
     private static ExtractNotifier(val: any): HandlesEvent | undefined {
-        var result = undefined;
+        let result = undefined;
         if (val !== undefined && val !== null) {
             if (!(val instanceof EventNotifier)) {
                 if (val.getNotifier !== undefined && (typeof val.getNotifier === "function")) {
@@ -38,7 +38,7 @@ export class EventNotifier implements FullOpEventNotifier {
         this._handlers = [];
     }
     addListener(he: HandlesEvent | HasNotifier | EventListener) {
-        var extr = EventNotifier.ExtractNotifier(he);
+        let extr = EventNotifier.ExtractNotifier(he);
         if (extr) {
             if (this._handlers.indexOf(extr) === -1) {
                 this._handlers.push(extr);
@@ -49,7 +49,7 @@ export class EventNotifier implements FullOpEventNotifier {
         this._handlers = [];
     }
     removeListener(he: HandlesEvent | HasNotifier | EventListener) {
-        var extr = EventNotifier.ExtractNotifier(he);
+        let extr = EventNotifier.ExtractNotifier(he);
         if (extr) {
             let idx = this._handlers.indexOf(extr);
             if (idx !== -1) {
@@ -74,7 +74,7 @@ export class EventListener extends EventNotifier implements HandlesEvent, FullOp
     private _handler: ((evt: IChangeEvent) => void);
     constructor(handler?: ((evt: IChangeEvent) => void), ctx?: any) {
         super();
-        var me = this;
+        let me = this;
         this._handler = (function (evt) {
             this.sendEvent(evt);
         });
@@ -96,7 +96,7 @@ export class EventListener extends EventNotifier implements HandlesEvent, FullOp
     }
     prependHandler(func: ((evt: IChangeEvent) => void), ctx: any): ((evt: IChangeEvent) => void) {
         if (func !== undefined) {
-            var hndler = this._handler;
+            let hndler = this._handler;
             if (hndler === undefined) {
                 this._handler = (function (evt: IChangeEvent) {
                     func.apply(ctx, [evt]);
@@ -118,7 +118,7 @@ export class EventListener extends EventNotifier implements HandlesEvent, FullOp
         }
     }
     listen(evn: EventNotifier | HasNotifier) {
-        var evnNote = undefined;
+        let evnNote = undefined;
         if (evn !== undefined && !(evn instanceof EventNotifier)) {
             evnNote = evn.getNotifier();
         }
@@ -172,8 +172,8 @@ abstract class BaseHasNotifier<T extends EventNotifier> extends Silencable imple
         let notif = this.getNotifier();
         if (notif !== undefined) {
             if (!this.muted) {
-                var asObj: any = notif;
-                var func: Function = asObj[fName];
+                let asObj: any = notif;
+                let func: Function = asObj[fName];
                 //.removeListener(he);
                 return func.apply(notif, args);
             }
@@ -253,14 +253,14 @@ export class BaseEventNotifier extends BaseHasNotifier<EventNotifier> {
 export class BaseEventListener extends BaseHasNotifier<EventListener> implements FullOpHasEventListener {
 
     get eventFilter(): (evt: IChangeEvent) => boolean {
-        var notif = this.getNotifier();
+        let notif = this.getNotifier();
         if (notif !== undefined) {
             return notif.eventFilter;
         }
         return EventListener.DEFAULT_FILTER;
     }
     set eventFilter(filter: (evt: IChangeEvent) => boolean) {
-        var notif = this.getNotifier();
+        let notif = this.getNotifier();
         if (notif !== undefined) {
             notif.eventFilter = filter;
         }
@@ -268,7 +268,7 @@ export class BaseEventListener extends BaseHasNotifier<EventListener> implements
 
 
     prependHandler(func: ((evt: IChangeEvent) => void), ctx: any=this): ((evt: IChangeEvent) => void) | undefined {
-        var notif = this.getNotifier();
+        let notif = this.getNotifier();
         if (notif !== undefined) {
             return notif.prependHandler(func, ctx);
         }
@@ -276,7 +276,7 @@ export class BaseEventListener extends BaseHasNotifier<EventListener> implements
     }
 
     onEvent(evt: IChangeEvent): void {
-        var notif = this.getNotifier();
+        let notif = this.getNotifier();
         if (notif !== undefined) {
             if (!this.muted) {
                 notif.onEvent(evt);
@@ -284,7 +284,7 @@ export class BaseEventListener extends BaseHasNotifier<EventListener> implements
         }
     }
     listen(evn: EventNotifier | HasNotifier): void {
-        var notif = this.getNotifier();
+        let notif = this.getNotifier();
         if (notif !== undefined) {
             if (!this.muted) {
                 notif.listen(evn);
